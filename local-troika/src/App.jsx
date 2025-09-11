@@ -9,8 +9,8 @@ function App() {
     <>
      <SupaChatbot
      chatbotId={"68bec1b89c8c40d6ab428b5d"}
-     apiBase={"https://api.0804.in/api"}
-    //  apiBase={"http://localhost:5000/api"}
+    //  apiBase={"https://api.0804.in/api"}
+     apiBase={"http://localhost:5000/api"}
      
      /> 
     // </>
