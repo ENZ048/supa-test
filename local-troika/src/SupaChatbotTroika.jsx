@@ -2,361 +2,19 @@ import React, {
   useState,
   useEffect,
   useRef,
-  useCallback,
-  useMemo,
+  useCallback
 } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiMail, FiArrowRight, FiArrowUp } from "react-icons/fi";
+import { FiMail, FiArrowRight } from "react-icons/fi";
 import { FaVolumeUp, FaStopCircle } from "react-icons/fa";
 import { TypeAnimation } from "react-type-animation";
 import { IoSend } from "react-icons/io5";
 import { FiMic, FiSquare, FiVolume2, FiVolumeX } from "react-icons/fi";
 import ReactMarkdown from "react-markdown";
-
-// Custom Typewriter Component for Markdown
-const TypewriterMarkdown = ({ text, onComplete, speed = 20 }) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const intervalRef = useRef(null);
-
-  // Function to parse markdown and create segments with their types
-  const parseMarkdown = (text) => {
-    const segments = [];
-    const lines = text.split("\n");
-    let charPosition = 0;
-
-    lines.forEach((line, lineIndex) => {
-      // Add newline character for all lines except the first
-      if (lineIndex > 0) {
-        segments.push({
-          type: "newline",
-          content: "\n",
-          start: charPosition,
-          end: charPosition + 1,
-        });
-        charPosition += 1;
-      }
-
-      const trimmedLine = line.trim();
-
-      // Check for bullet points (*, -, +)
-      const bulletMatch = trimmedLine.match(/^[\*\-\+]\s+(.+)$/);
-      if (bulletMatch) {
-        segments.push({
-          type: "list-item",
-          content: bulletMatch[1],
-          bullet: trimmedLine[0],
-          start: charPosition,
-          end: charPosition + bulletMatch[1].length,
-        });
-        charPosition += bulletMatch[1].length;
-        return;
-      }
-
-      // Check for numbered lists
-      const numberedMatch = trimmedLine.match(/^\d+\.\s+(.+)$/);
-      if (numberedMatch) {
-        segments.push({
-          type: "numbered-item",
-          content: numberedMatch[1],
-          number: numberedMatch[0].match(/^(\d+)\./)[1],
-          start: charPosition,
-          end: charPosition + numberedMatch[1].length,
-        });
-        charPosition += numberedMatch[1].length;
-        return;
-      }
-
-      // Process regular text with inline markdown
-      if (line.length > 0) {
-        const inlineSegments = parseInlineMarkdown(line, charPosition);
-        segments.push(...inlineSegments);
-        // Update charPosition based on the actual content length (excluding markdown syntax)
-        const contentLength = line
-          .replace(/\*\*(.*?)\*\*/g, "$1")
-          .replace(/\*(.*?)\*/g, "$1")
-          .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
-          .replace(/`(.*?)`/g, "$1").length;
-        charPosition += contentLength;
-      }
-    });
-
-    return segments;
-  };
-
-  // Function to parse inline markdown (bold, italic, links, code)
-  const parseInlineMarkdown = (text, startOffset = 0) => {
-    const segments = [];
-    let currentPos = 0;
-
-    // Regex patterns for different markdown elements - ordered by priority
-    const patterns = [
-      { type: "bold", regex: /\*\*(.*?)\*\*/g },
-      { type: "italic", regex: /(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g }, // Negative lookbehind/lookahead to avoid bold conflicts
-      { type: "link", regex: /\[(.*?)\]\((.*?)\)/g },
-      { type: "code", regex: /`(.*?)`/g },
-    ];
-
-    const matches = [];
-
-    // Find all markdown patterns
-    patterns.forEach((pattern) => {
-      let match;
-      const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
-      while ((match = regex.exec(text)) !== null) {
-        matches.push({
-          type: pattern.type,
-          start: match.index,
-          end: match.index + match[0].length,
-          full: match[0],
-          content: match[1],
-          url: match[2], // for links
-        });
-      }
-    });
-
-    // Remove overlapping matches (keep the first one found)
-    const filteredMatches = [];
-    matches.forEach((match) => {
-      const hasOverlap = filteredMatches.some(
-        (existing) => match.start < existing.end && match.end > existing.start
-      );
-      if (!hasOverlap) {
-        filteredMatches.push(match);
-      }
-    });
-
-    // Sort matches by position
-    filteredMatches.sort((a, b) => a.start - b.start);
-
-    // Create segments
-    filteredMatches.forEach((match) => {
-      // Add text before this match
-      if (match.start > currentPos) {
-        segments.push({
-          type: "text",
-          content: text.slice(currentPos, match.start),
-          start: startOffset + currentPos,
-          end: startOffset + match.start,
-        });
-      }
-
-      // Add the markdown element
-      segments.push({
-        type: match.type,
-        content: match.content,
-        full: match.full,
-        url: match.url,
-        start: startOffset + match.start,
-        end: startOffset + match.end,
-      });
-
-      currentPos = match.end;
-    });
-
-    // Add remaining text
-    if (currentPos < text.length) {
-      segments.push({
-        type: "text",
-        content: text.slice(currentPos),
-        start: startOffset + currentPos,
-        end: startOffset + text.length,
-      });
-    }
-
-    // If no matches found, return the entire text as a single segment
-    if (filteredMatches.length === 0) {
-      return [
-        {
-          type: "text",
-          content: text,
-          start: startOffset,
-          end: startOffset + text.length,
-        },
-      ];
-    }
-
-    return segments;
-  };
-
-  // Get the visible content based on current typing position
-  const getVisibleContent = (segments, targetLength) => {
-    let currentLength = 0;
-    const visibleSegments = [];
-
-    for (const segment of segments) {
-      if (segment.type === "newline") {
-        if (currentLength < targetLength) {
-          visibleSegments.push(segment);
-          currentLength += 1;
-        }
-        continue;
-      }
-
-      const segmentContentLength = segment.content.length;
-      const segmentStart = currentLength;
-      const segmentEnd = currentLength + segmentContentLength;
-
-      if (targetLength <= segmentStart) {
-        break; // We haven't reached this segment yet
-      }
-
-      if (targetLength >= segmentEnd) {
-        // Entire segment is visible
-        visibleSegments.push(segment);
-        currentLength = segmentEnd;
-      } else {
-        // Partial segment is visible
-        const partialLength = targetLength - segmentStart;
-        visibleSegments.push({
-          ...segment,
-          content: segment.content.substring(0, partialLength),
-          partial: true,
-        });
-        break;
-      }
-    }
-
-    return visibleSegments;
-  };
-
-  // Render the segments as JSX
-  const renderSegments = (segments) => {
-    return segments.map((segment, index) => {
-      switch (segment.type) {
-        case "bold":
-          return <strong key={index}>{segment.content}</strong>;
-        case "italic":
-          return <em key={index}>{segment.content}</em>;
-        case "link":
-          return (
-            <a
-              key={index}
-              href={segment.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "#1e90ff",
-                textDecoration: "none",
-                transition: "all 0.2s ease-in-out",
-              }}
-            >
-              {segment.content}
-            </a>
-          );
-        case "code":
-          return (
-            <code
-              key={index}
-              style={{
-                backgroundColor: "#f0f0f0",
-                padding: "2px 4px",
-                borderRadius: "3px",
-                fontSize: "0.9em",
-              }}
-            >
-              {segment.content}
-            </code>
-          );
-        case "list-item":
-          // Parse inline markdown within list items
-          const listInlineSegments = parseInlineMarkdown(segment.content, 0);
-          return (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                marginBottom: "4px",
-              }}
-            >
-              <span
-                style={{ marginRight: "8px", minWidth: "16px", color: "#666" }}
-              >
-                •
-              </span>
-              <span>{renderSegments(listInlineSegments)}</span>
-            </div>
-          );
-        case "numbered-item":
-          // Parse inline markdown within numbered list items
-          const numberedInlineSegments = parseInlineMarkdown(
-            segment.content,
-            0
-          );
-          return (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                marginBottom: "4px",
-              }}
-            >
-              <span
-                style={{ marginRight: "8px", minWidth: "20px", color: "#666" }}
-              >
-                {segment.number}.
-              </span>
-              <span>{renderSegments(numberedInlineSegments)}</span>
-            </div>
-          );
-        case "newline":
-          return <br key={index} />;
-        default:
-          return <span key={index}>{segment.content}</span>;
-      }
-    });
-  };
-
-  // Calculate total visible text length (excluding markdown syntax)
-  const getTotalTextLength = (text) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold syntax
-      .replace(/\*(.*?)\*/g, "$1") // Remove italic syntax
-      .replace(/\[(.*?)\]\((.*?)\)/g, "$1") // Remove link syntax
-      .replace(/`(.*?)`/g, "$1") // Remove code syntax
-      .replace(/^[\*\-\+]\s+/gm, "") // Remove bullet points
-      .replace(/^\d+\.\s+/gm, "").length; // Remove numbered list syntax
-  };
-
-  const segments = parseMarkdown(text);
-  const totalLength = getTotalTextLength(text);
-
-  useEffect(() => {
-    if (currentIndex < totalLength) {
-      intervalRef.current = setTimeout(() => {
-        setCurrentIndex(currentIndex + 1);
-      }, speed);
-    } else if (currentIndex >= totalLength && onComplete) {
-      setTimeout(() => onComplete(), 100);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
-      }
-    };
-  }, [currentIndex, totalLength, speed, onComplete]);
-
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [text]);
-
-  const visibleSegments = getVisibleContent(segments, currentIndex);
-
-  return (
-    <div style={{ minHeight: "1.5em" }}>
-      <div style={{ margin: "0", padding: "0" }}>
-        {renderSegments(visibleSegments)}
-      </div>
-    </div>
-  );
-};
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -583,7 +241,6 @@ const Overlay = styled.div`
   overscroll-behavior: contain; /* prevents scroll chaining to host page */
   touch-action: pan-y; /* keeps vertical scrolling smooth inside */
   z-index: 2147481000; /* sits above WP sticky headers/admin bar */
-  overflow: visible; /* Ensure buttons are not clipped */
 `;
 
 const Chatbox = styled.div`
@@ -594,33 +251,35 @@ const Chatbox = styled.div`
   opacity: 0;
   animation: slideUp 0.5s ease-out forwards;
   width: 100%; /* Changed from 90% */
-  max-width: 380px; /* Decreased from 420px */
+  max-width: 420px;
   height: 95vh; /* Adjusted for better viewport fit */
   max-height: 700px;
   background-color: #fff6f0;
 
-  /* 2. Layer multiple radial gradients for the aura effect */
+  /* 1. Base background changed from white to a light gray */
+  background-color: #f4f4f8; /* CHANGED from #FFFFFF */
+
+  /* 2. Layered radial gradients with increased opacity */
   background-image:
-    /* Top-left aura using your accent color #BC3D19 */ radial-gradient(
-      ellipse 60% 50% at -10% 20%,
-      /* Shape and position */ rgba(188, 61, 25, 0.2),
-      /* The color with transparency */ transparent 80%
+    /* Top-right aura using your purple color #4313a5 */ radial-gradient(
+      ellipse 50% 60% at 90% 20%,
+      /* Shape and position */ rgba(67, 19, 165, 0.15),
+      /* CHANGED: Opacity increased to 15% */ transparent 80%
         /* Fade to transparent */
     ),
-    /* Bottom-left aura using white to mimic the light green area */
+    /* Bottom-left aura using your teal color #017977 */
       radial-gradient(
-        ellipse 70% 55% at 40% 110%,
-        /* Shape and position */ rgba(255, 255, 255, 0.9),
-        /* White with transparency */ transparent 80% /* Fade to transparent */
+        ellipse 70% 60% at 10% 90%,
+        /* Shape and position */ rgba(1, 121, 119, 0.18),
+        /* CHANGED: Opacity increased to 18% */ transparent 80%
+          /* Fade to transparent */
       );
 
-  /* Make sure the background stays fixed while content scrolls */
+  /* Make the background stay fixed while content scrolls */
   background-attachment: fixed;
-  /* Inner rounding now that outer frame supplies bezel */
-  /* Increased rounding for chat window */
-  border-radius: 30px;
-  /* Remove heavy outer shadow; let frame handle it */
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -629,187 +288,7 @@ const Chatbox = styled.div`
   @media (max-width: 480px) {
     height: 97vh;
     max-height: 100vh;
-    /* Increased rounding for mobile while keeping inside bezel */
-    border-radius: 24px;
-  }
-`;
-
-/* iPhone-like device frame (bezel) */
-const DeviceFrame = styled.div`
-  position: relative;
-  width: 100%;
-  max-width: 388px; /* Adjusted for narrower chat (380 + 4 + 4) */
-  margin: 0 auto; /* Center the frame on all screen sizes */
-  padding: 8px 4px; /* Slimmer left/right bezel */
-  border-radius: 36px; /* Adjusted for slimmer profile */
-  background: #050505; /* Outer bezel */
-  background-image: radial-gradient(circle at 35% 25%, #121212 0%, #050505 70%);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32), 0 2px 5px rgba(0, 0, 0, 0.22),
-    0 0 0 1px #0a0a0a; /* Subtle outline */
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  overflow: visible; /* Ensure buttons are not clipped */
-  -webkit-mask-image: none; /* Remove mask to prevent button clipping */
-
-  /* Ensure buttons are visible outside the frame */
-  &::before,
-  &::after {
-    z-index: 1; /* Lower than buttons */
-  }
-
-  /* Subtle inner shadow around the glass edge */
-  &:after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    border-radius: 32px;
-    pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04),
-      inset 0 0 5px rgba(0, 0, 0, 0.5), inset 0 0 2px rgba(255, 255, 255, 0.05);
-  }
-
-  /* iPhone-like notch/Dynamic Island */
-  &:before {
-    content: "";
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 28px;
-    background: #000;
-    border-radius: 16px;
-    z-index: 50;
-  }
-
-  /* Bottom gesture bar */
-  .gesture-bar {
-    position: absolute;
-    bottom: 4px; /* Slightly raised due to uniform bezel */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 4px;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.35),
-      rgba(255, 255, 255, 0.15)
-    );
-    border-radius: 3px;
-    filter: blur(0.2px);
-  }
-
-  @media (max-width: 480px) {
-    max-width: 388px; /* Keep consistent width, don't expand to 100% */
-    padding: 8px 4px; /* Keep consistent bezel thickness */
-    border-radius: 30px;
-    &:after {
-      inset: 2px;
-      border-radius: 26px;
-    }
-    &:before {
-      top: 10px;
-      width: 80px;
-      height: 24px;
-      border-radius: 14px;
-    }
-    .gesture-bar {
-      bottom: 4px;
-      width: 78px;
-      height: 3px;
-    }
-  }
-`;
-
-/* iPhone-style Power Button (Mock/Decorative) */
-const PowerButton = styled.div`
-  position: absolute;
-  right: -4px;
-  top: 185px;
-  width: 10px;
-  height: 60px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
-  border-radius: 4px 0 0 4px;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
-  pointer-events: none;
-
-  @media (max-width: 480px) {
-    right: -3px;
-    top: 165px;
-    width: 8px;
-    height: 50px;
-  }
-`;
-
-/* iPhone-style Volume Buttons (Mock/Decorative) */
-const VolumeUpButton = styled.div`
-  position: absolute;
-  left: -4px;
-  top: 195px;
-  width: 10px;
-  height: 35px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
-  border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
-  pointer-events: none;
-
-  @media (max-width: 480px) {
-    left: -3px;
-    top: 175px;
-    width: 8px;
-    height: 30px;
-  }
-`;
-
-const VolumeDownButton = styled.div`
-  position: absolute;
-  left: -4px;
-  top: 240px;
-  width: 10px;
-  height: 35px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
-  border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
-  pointer-events: none;
-
-  @media (max-width: 480px) {
-    left: -3px;
-    top: 215px;
-    width: 8px;
-    height: 30px;
-  }
-`;
-
-/* iPhone-style Silent/Ringer Switch (Mock/Decorative) */
-const SilentSwitch = styled.div`
-  position: absolute;
-  left: -4px;
-  top: 155px;
-  width: 10px;
-  height: 20px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
-  border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
-  pointer-events: none;
-
-  @media (max-width: 480px) {
-    left: -3px;
-    top: 140px;
-    width: 8px;
-    height: 18px;
+    border-radius: 15px;
   }
 `;
 
@@ -817,7 +296,7 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3rem 1rem 1rem 1rem; /* Increased top padding to avoid notch */
+  padding: 1rem;
   border-bottom: none;
   background: transparent;
   flex-shrink: 0;
@@ -829,32 +308,11 @@ const HeaderLeft = styled.div`
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 0.6rem;
-  padding-top: 0.25rem;
-`;
-
-/* Generic circle wrapper so avatar, bot name and status can each sit in a circle */
-const Circle = styled.div`
-  width: ${(props) => props.$size || 80}px;
-  height: ${(props) => props.$size || 80}px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  padding: 0; /* removed extra padding so avatar fills circle */
-  text-align: center;
 `;
 
 const Avatar = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* fill circle exactly */
-  border-radius: 50%;
-  display: block;
+  width: auto !important;
+  height: 70px !important; /* Increased size */
 `;
 
 const StatusBlock = styled.div`
@@ -866,10 +324,9 @@ const StatusBlock = styled.div`
 
 const BotName = styled.div`
   font-weight: 800;
-  color: #bc3d19;
+  color: balck;
   font-size: 1.25rem;
   text-align: center;
-  line-height: 1.1;
 
   @media (max-width: 480px) {
     font-size: 0.9rem;
@@ -884,9 +341,9 @@ const Status = styled.div`
 
 const CloseBtn = styled.div`
   position: absolute;
-  top: 0.1rem; /* Reverted to original position */
+  top: 1rem;
   right: 1rem;
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: bold;
   cursor: pointer;
   color: #333;
@@ -896,6 +353,133 @@ const CloseBtn = styled.div`
   &:hover {
     transform: rotate(90deg);
     color: #666;
+  }
+`;
+
+const AuthContainer = styled.div`
+  animation: slideDown 0.5s ease-in-out 0.6s;
+  animation-fill-mode: both;
+  position: absolute;
+  top: 95px; /* height of your chat header */
+  left: 0;
+  right: -6px;
+  bottom: 0;
+  width: 90%;
+  height: calc(100% - 127px); /* subtract header */
+  background: #fff;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+`;
+
+const IconCircle = styled.div`
+  animation: pop 3s ease-in-out;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    hsla(344, 97%, 63%, 1) 0%,
+    hsla(232, 90%, 59%, 1) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #fff;
+  flex-shrink: 0; /* Prevent shrinking */
+`;
+
+const StyledMailIcon = styled(FiMail)`
+  color: white;
+  font-size: 36px;
+`;
+
+const Title = styled.h2`
+  animation: fadeInItem 0.5s ease 0.7s both;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem 0;
+  color: #4b4b4b;
+`;
+
+const SubTitle = styled.p`
+  animation: fadeInItem 0.5s ease 0.9s both;
+  font-size: 0.875rem;
+  color: #777;
+  margin-bottom: 2rem;
+  max-width: 320px; /* Constrain width for better readability */
+  text-align: center;
+`;
+
+const Input = styled.input`
+  animation: fadeInItem 0.5s ease 1.1s both;
+  width: 87%;
+  max-width: 370px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  outline: none;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s;
+  text-align: center; /* Center placeholder and input text */
+
+  &::placeholder {
+    text-align: center; /* Specifically center placeholder */
+  }
+
+  &:focus {
+    border-color: #a97fff;
+  }
+`;
+
+const bounceX = keyframes`
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-6px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+`;
+
+const Button = styled.button`
+  animation: fadeInItem 0.5s ease 1.3s both;
+  width: 100%;
+  max-width: 250px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, #bc3d19 0%, rgba(188, 61, 25, 0.8) 100%);
+  color: white;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.25s ease;
+
+  &:not(:disabled):hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    opacity: 0.95;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .infinite-arrow {
+    animation: ${bounceX} 1.2s infinite ease-in-out;
+    position: relative;
+    top: 1px;
+    display: inline-block;
   }
 `;
 
@@ -960,7 +544,7 @@ const ChatInput = styled.input`
   transition: border-color 0.3s;
   background: white;
   &:focus {
-    border-color: #bc3d19;
+    border-color: #a97fff;
   }
 `;
 
@@ -979,6 +563,15 @@ const InputButtons = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  /* Make all buttons inside input container black */
+  button {
+    color: rgba(46, 67, 86, 1) !important;
+    /* If using SVG icons, also force their color */
+    svg {
+      color: rgba(46, 67, 86, 1) !important;
+    }
+  }
 
   /* ensure buttons don't unexpectedly cover text on small screens */
   @media (max-width: 480px) {
@@ -1008,7 +601,6 @@ const MessageBubble = styled.div`
   word-wrap: break-word;
   max-width: 90%;
   overflow: visible;
-  position: relative;
 
   /* Conditional styles for the USER's message (right side) */
   ${(props) =>
@@ -1020,19 +612,6 @@ const MessageBubble = styled.div`
     /* top-left | top-right | bottom-right | bottom-left */
     border-radius: 22px 22px 5px 22px; 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    
-    /* Message tail for user (pointing right) */
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      right: -8px;
-      width: 0;
-      height: 0;
-      border-left: 15px solid #000000;
-      border-top: 15px solid transparent;
-      border-bottom: 0px solid transparent;
-    }
   `
       : `
   /* Conditional styles for the BOT's message (left side) */
@@ -1043,23 +622,9 @@ const MessageBubble = styled.div`
     /* top-left | top-right | bottom-right | bottom-left */
     border-radius: 22px 22px 22px 5px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    
-    /* Message tail for bot (pointing left) */
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: -8px;
-      width: 0;
-      height: 0;
-      border-right: 15px solid rgba(255, 255, 255, 0.9);
-      border-top: 15px solid transparent;
-      border-bottom: 0px solid transparent;
-    }
   `}
 `;
 
-// A simple flex container is needed to make alignment work
 const MessageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -1073,13 +638,35 @@ const Timestamp = styled.span`
   margin-top: 0.375rem;
 `;
 
+const TypingBubble = styled(MessageBubble)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  /* Add triangular tail for typing bubble */
+  &::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    bottom: 12px;
+    width: 0;
+    height: 0;
+    border-right: 8px solid rgba(255, 255, 255, 0.9);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+  }
+`;
+
 const glow = keyframes`
  0% { box-shadow: 0 0 0px #cc33ff; }
  50% { box-shadow: 0 0 12px #cc33ff; }
  100% { box-shadow: 0 0 0px #cc33ff; }
 `;
 
-// otp conatainer
 
 const OtpContainer = styled.div`
   padding: 0px 24px 24px 24px;
@@ -1215,58 +802,36 @@ const ResendLink = styled.p`
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  background: transparent;
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  max-width: 36px;
-  max-height: 36px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: white;
+  color: #bc3d19;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  padding: 0;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
-  aspect-ratio: 1;
 
   svg {
     color: inherit;
     flex-shrink: 0;
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    font-weight: 900;
-    stroke-width: 3;
+    font-size: 25px;
   }
 
   &:hover:not(:disabled) {
     transform: scale(1.1);
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #14532d 100%);
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    color: #9333ea;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.4;
     cursor: not-allowed;
     transform: none;
-    background: #9ca3af;
-    box-shadow: none;
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
   }
 `;
 
@@ -1304,7 +869,7 @@ const MuteButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: scale(1.1);
-    color: ${(props) => (props.$isMuted ? "#dc2626" : "#ff6b6b")};
+    color: ${(props) => (props.$isMuted ? "#dc2626" : "#9333ea")};
   }
 
   &:disabled {
@@ -1340,25 +905,12 @@ const FloatingUnit = styled.div`
 `;
 
 const Label = styled.div`
-  background: #bc3d19;
-  // background: hsla(205, 46%, 30%, 1);
-  // background: linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // background: -moz-linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // background: -webkit-linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#295270", endColorstr="#524175", GradientType=1);
-  color: #fff;
+  background: linear-gradient(90deg, #273c47 0%, #5a3fcf 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(67, 19, 165, 0.18);
+  text-shadow: 0 1px 4px rgba(1, 121, 119, 0.18);
+  opacity: 0.98;
+  border: 1px solid #232946;
   padding: 4px 35px; /* Adjusted padding */
   border-radius: 12px;
   font-weight: 800;
@@ -1435,7 +987,7 @@ const VoiceButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: ${(props) => (props.$isRecording ? "scale(1.2)" : "scale(1.1)")};
-    color: ${(props) => (props.$isRecording ? "#dc2626" : "#ff6b6b")};
+    color: ${(props) => (props.$isRecording ? "#dc2626" : "#9333ea")};
   }
 
   &:disabled {
@@ -1443,14 +995,17 @@ const VoiceButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
+`;
 
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
+const VoiceMobileInstructions = styled.p`
+  text-align: center;
+  color: #888;
+  font-size: 0.75rem;
+  margin: 0.5rem 0 0 0;
 
-  &:focus-visible {
-    outline: none;
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    padding: 0 0.5rem;
   }
 `;
 
@@ -1463,6 +1018,9 @@ const MessageActions = styled.div`
 `;
 
 const PlayButton = styled.button`
+  background: rgba(188, 61, 25, 0.1);
+  border: 1px solid rgba(188, 61, 25, 0.3);
+  border-radius: 50%;
   cursor: pointer;
   color: #bc3d19;
   display: flex;
@@ -1474,7 +1032,6 @@ const PlayButton = styled.button`
   height: 28px;
   font-size: 12px;
   outline: none;
-  background: transparent;
 
   &:focus {
     outline: none;
@@ -1486,10 +1043,14 @@ const PlayButton = styled.button`
   }
 
   &:hover {
+    background: rgba(188, 61, 25, 0.2);
+    border-color: rgba(188, 61, 25, 0.5);
     transform: scale(1.1);
   }
 
   &:disabled {
+    background: rgba(168, 85, 247, 0.3);
+    border-color: rgba(168, 85, 247, 0.6);
     cursor: default;
     transform: none;
   }
@@ -1763,7 +1324,6 @@ const CarouselButton = styled.button`
   }
 `;
 
-// Product Card Component
 const ProductCardComponent = ({ product }) => {
   const formatPrice = (price) => {
     if (!price) return "Price not available";
@@ -1815,7 +1375,6 @@ const ProductCardComponent = ({ product }) => {
   );
 };
 
-// Product Cards Container Component
 const ProductCardsComponent = ({ productCards }) => {
   const carouselRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -1846,16 +1405,14 @@ const ProductCardsComponent = ({ productCards }) => {
     }
   };
 
-  // Determine if we can scroll left/right (for disabling buttons and edge fades)
   const updateScrollState = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
-    const maxScrollLeft = el.scrollWidth - el.clientWidth - 1; // -1 to account for rounding
+  const maxScrollLeft = el.scrollWidth - el.clientWidth - 1;
     setCanScrollLeft(el.scrollLeft > 0);
     setCanScrollRight(el.scrollLeft < maxScrollLeft);
   }, []);
 
-  // Drag functionality
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - carouselRef.current.offsetLeft);
@@ -1884,12 +1441,11 @@ const ProductCardsComponent = ({ productCards }) => {
     if (!isDragging) return;
     e.preventDefault();
     const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Multiply for faster scrolling
+  const walk = (x - startX) * 2;
     carouselRef.current.scrollLeft = scrollLeft - walk;
     updateScrollState();
   };
 
-  // Touch events for mobile
   const handleTouchStart = (e) => {
     setIsDragging(true);
     setStartX(e.touches[0].pageX - carouselRef.current.offsetLeft);
@@ -1913,14 +1469,12 @@ const ProductCardsComponent = ({ productCards }) => {
     }
   };
 
-  // Cleanup drag state on unmount
   useEffect(() => {
     updateScrollState();
     const el = carouselRef.current;
     if (!el) return;
     const onScroll = () => updateScrollState();
     el.addEventListener("scroll", onScroll, { passive: true });
-    // Also update on resize as widths change
     const onResize = () => updateScrollState();
     window.addEventListener("resize", onResize);
     return () => {
@@ -1984,8 +1538,6 @@ const ProductCardsComponent = ({ productCards }) => {
   );
 };
 
-// --- Your React components (OtpInputComponent, SupaChatbot) remain here ---
-// ... No changes needed for the component logic, only for the styled-components ...
 const OtpInputComponent = ({ otp, setOtp }) => {
   const inputRefs = useRef([]);
 
@@ -1994,12 +1546,10 @@ const OtpInputComponent = ({ otp, setOtp }) => {
   }, []);
 
   const handleChange = (index, value) => {
-    // Only allow single digits
     if (value.length > 1) {
       value = value.slice(-1);
     }
 
-    // Only allow numbers
     if (value && !/^[0-9]$/.test(value)) {
       return;
     }
@@ -2008,7 +1558,6 @@ const OtpInputComponent = ({ otp, setOtp }) => {
     newOtp[index] = value;
     setOtp(newOtp.join(""));
 
-    // Auto-focus next input
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -2106,14 +1655,13 @@ const CreativeLoadingText = () => {
     "Crafting magic...",
     "Weaving thoughts...",
     "Sparking ideas...",
-    "Matching the perfect accessories...",
-    "Perfecting the silhouette...",
-    "Curating designer vibes...",
+    "Brewing brilliance...",
+    "Unleashing creativity...",
+    "Channeling wisdom...",
     "Generating insights...",
     "Processing brilliance...",
     "Thinking deeply...",
-    "Weaving elegance into words...",
-    "Adding a touch of luxury...",
+    "Formulating response...",
   ];
 
   const [currentText, setCurrentText] = useState(0);
@@ -2291,14 +1839,18 @@ const ListeningText = styled.div`
   color: #000000;
   margin-top: 8px;
   font-weight: 500;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2),
+    0 0 15px rgba(0, 0, 0, 0.1);
   animation: textGlow 2s ease-in-out infinite alternate;
 
   @keyframes textGlow {
     0% {
-      opacity: 0.8;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2),
+        0 0 15px rgba(0, 0, 0, 0.1);
     }
     100% {
-      opacity: 1;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 0, 0, 0.3),
+        0 0 24px rgba(0, 0, 0, 0.2);
     }
   }
 `;
@@ -2317,33 +1869,42 @@ const RecordingBars = ({ isVisible }) => {
   );
 };
 
+function stripMarkdown(markdownText) {
+  return markdownText
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
+    .replace(/[#>`]/g, "")
+    .replace(/\n/g, " ");
+}
+
 // Function to get time-based greeting messages
 function getTimeBasedGreeting() {
   const now = new Date();
   const hour = now.getHours();
 
   const morningGreetings = [
-    "☀️ Good morning! Ready to add some style to your day?",
-    "Morning! A fresh day calls for fresh fashion—shall I show you?",
-    "Rise & shine—let’s find you something stunning today.",
+    "☀️ Good morning! Ready to kickstart your business today?",
+    "Morning! A fresh day = fresh ideas. What can I solve for you?",
+    "Rise & shine—let's make your business smarter today.",
   ];
 
   const afternoonGreetings = [
-    "Hey 👋 Hope your day’s going well! Want to browse some new looks?",
-    "Welcome! Afternoon is perfect for a little fashion inspo—shall we start?",
-    "Good afternoon! Looking for festive, casual, or bridal styles?",
+    "Hey 👋 Hope your day's going well! Need a quick business boost?",
+    "Welcome! Perfect time for a smart solution—shall we start?",
+    "Good afternoon! Tell me what's bugging you, I'll fix it fast.",
   ];
 
   const eveningGreetings = [
-    "Evenings are for elegance ✨ Shall I show you something chic?",
-    "Hey! Wrapping up your day? Let’s end it with a touch of style.",
-    "Good evening! Ready to explore some designer outfits?",
+    "Evenings are for smart moves ✨ What's on your mind?",
+    "Hey! Don't worry if it's late—business doesn't sleep, and neither do I.",
+    "Good evening! Ready to make your next big business move?",
   ];
 
   const lateNightGreetings = [
-    "🌙 Still awake? Perfect time to discover timeless fashion.",
-    "You’re up late, and so is couture—shall I find you something unique?",
-    "Midnight mood = fashion mood. Want to explore some statement pieces?",
+    "🌙 Burning the midnight oil? I'm here to help.",
+    "You're up late, and so am I. Let's get things done.",
+    "Insomniac or hustler? Either way—I've got your back.",
   ];
 
   let selectedGreetings;
@@ -2368,143 +1929,6 @@ function getTimeBasedGreeting() {
   ];
 }
 
-const Clock = styled.div`
-  position: absolute;
-  top: 16px; /* Reverted to original position */
-  left: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: #1f2937;
-  z-index: 20;
-  pointer-events: none;
-  user-select: none;
-`;
-
-const BatteryContainer = styled.div`
-  position: absolute;
-  top: 16px;
-  right: 60px; /* Moved left to avoid close button overlap */
-  display: flex;
-  align-items: center;
-  gap: 4px; /* Restored gap between percentage and battery */
-  font-size: 0.85rem; /* iPhone-style smaller font */
-  font-weight: 600;
-  color: #000000; /* Pure black like iPhone */
-  z-index: 20;
-  pointer-events: none;
-  user-select: none;
-
-  @media (max-width: 480px) {
-    right: 50px; /* Adjust for mobile */
-    font-size: 0.8rem;
-  }
-`;
-
-const BatteryIcon = styled.div`
-  width: 25px; /* Back to standard iPhone proportions */
-  height: 13px;
-  border: 1px solid #000000;
-  border-radius: 3px;
-  position: relative;
-  background: transparent;
-
-  &::before {
-    content: "";
-    position: absolute;
-    right: -4px;
-    top: 4px;
-    width: 3px;
-    height: 5px;
-    background: #000000;
-    border-radius: 0 2px 2px 0;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    left: 1.5px;
-    top: 1.5px;
-    bottom: 1.5px;
-    width: ${(props) => Math.max(0, (props.$level / 100) * 21)}px;
-    background: ${(props) => {
-      if (props.$isCharging) return "#34c759"; /* Always green when charging */
-      if (props.$level >= 50) return "#34c759"; /* iPhone green */
-      if (props.$level >= 20) return "#ff9500"; /* iPhone orange */
-      return "#ff3b30"; /* iPhone red */
-    }};
-    border-radius: 1.5px;
-    transition: width 0.3s ease;
-
-    ${(props) =>
-      props.$isCharging &&
-      `
-      animation: chargingPulse 2s ease-in-out infinite;
-      
-      @keyframes chargingPulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
-      }
-    `}
-  }
-
-  @media (max-width: 480px) {
-    width: 22px;
-    height: 11px;
-
-    &::before {
-      right: -3px;
-      top: 3px;
-      width: 2px;
-      height: 5px;
-    }
-
-    &::after {
-      width: ${(props) => Math.max(0, (props.$level / 100) * 18)}px;
-    }
-  }
-`;
-
-const ChargingIcon = styled.div`
-  position: absolute;
-  right: 64px; /* Next to battery percentage */
-  top: 16px;
-  font-size: 0.8rem;
-  color: #34c759; /* iPhone green */
-  z-index: 21;
-  pointer-events: none;
-  user-select: none;
-  animation: chargingBolt 1.5s ease-in-out infinite;
-
-  @keyframes chargingBolt {
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
-  }
-
-  @media (max-width: 480px) {
-    right: 54px;
-    font-size: 0.75rem;
-  }
-`;
-
-const BatteryPercentage = styled.span`
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: #000000; /* Pure black like iPhone */
-
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-  }
-`;
-
 const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [showChat, setShowChat] = useState(false);
   // const [email, setEmail] = useState("");
@@ -2521,7 +1945,6 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   const [resendTimeout, setResendTimeout] = useState(0);
   const [resendIntervalId, setResendIntervalId] = useState(null);
-  // const [isEmailValid, setIsEmailValid] = useState(false);
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -2545,12 +1968,8 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [showInlineAuthInput, setShowInlineAuthInput] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [chatbotLogo, setChatbotLogo] = useState(
-    "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png"
+    "https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png"
   );
-
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [batteryLevel, setBatteryLevel] = useState(100);
-  const [isCharging, setIsCharging] = useState(false);
 
   const [finalGreetingReady, setFinalGreetingReady] = useState(false);
   const [ttsGenerationInProgress, setTtsGenerationInProgress] = useState(false);
@@ -2564,6 +1983,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const endOfMessagesRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const hasMounted = useRef(false);
+  const renderCountRef = useRef(0);
   const greetingAutoPlayed = useRef(false);
 
   const AUTH_GATE_KEY = (sid, bot) => `supa_auth_gate:${bot}:${sid}`;
@@ -3063,55 +2483,6 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     setSessionId(id);
   }, []);
 
-  // Update clock every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Get battery information
-  useEffect(() => {
-    const getBatteryInfo = async () => {
-      try {
-        if ("getBattery" in navigator) {
-          const battery = await navigator.getBattery();
-          setBatteryLevel(Math.round(battery.level * 100));
-          setIsCharging(battery.charging);
-
-          // Listen for battery changes
-          battery.addEventListener("levelchange", () => {
-            setBatteryLevel(Math.round(battery.level * 100));
-          });
-
-          battery.addEventListener("chargingchange", () => {
-            setIsCharging(battery.charging);
-          });
-        } else {
-          // Fallback: simulate battery level for browsers that don't support Battery API
-          const simulateBattery = () => {
-            const randomLevel = Math.floor(Math.random() * 40) + 60; // 60-100%
-            setBatteryLevel(randomLevel);
-            setIsCharging(Math.random() > 0.7); // 30% chance of charging
-          };
-          simulateBattery();
-
-          // Update simulation occasionally
-          const interval = setInterval(simulateBattery, 30000); // Every 30 seconds
-          return () => clearInterval(interval);
-        }
-      } catch (error) {
-        console.log("Battery API not supported, using fallback");
-        // Fallback for unsupported browsers
-        setBatteryLevel(Math.floor(Math.random() * 40) + 60);
-        setIsCharging(Math.random() > 0.7);
-      }
-    };
-
-    getBatteryInfo();
-  }, []);
-
   // Set initial greeting immediately to prevent blank screen
   useEffect(() => {
     if (!finalGreetingReady && chatbotId) {
@@ -3321,6 +2692,14 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       sessionId,
     ]
   );
+
+  // Controlled scroll function - only scrolls the messages container
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, []);
 
   // Auto-scroll when new messages are added
   useEffect(() => {
@@ -3745,213 +3124,276 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
               alt="Chat"
               onError={(e) => {
                 e.target.src =
-                  "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png";
+                  "https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png";
               }}
             />
           </ChatButton>
-          <Label>Aza AI</Label>
+          <Label>Supa Agent</Label>
         </FloatingUnit>
       )}
 
       {showChat && (
         <Overlay ref={overlayRef}>
-          <DeviceFrame>
-            {/* iPhone-style Hardware Buttons (Mock/Decorative) */}
-            <PowerButton />
-            <SilentSwitch />
-            <VolumeUpButton />
-            <VolumeDownButton />
-
-            <Chatbox ref={chatboxRef}>
-              <Header>
-                <Clock>
-                  {(() => {
-                    const hours = currentTime.getHours();
-                    const minutes = currentTime.getMinutes();
-                    const displayHours = ((hours + 11) % 12) + 1; // 12-hour without leading zero
-                    const period = hours >= 12 ? "PM" : "AM";
-                    return `${displayHours}:${minutes
-                      .toString()
-                      .padStart(2, "0")} ${period}`;
-                  })()}
-                </Clock>
-                {isCharging && <ChargingIcon>⚡</ChargingIcon>}
-                <BatteryContainer>
-                  <BatteryPercentage>{batteryLevel}%</BatteryPercentage>
-                  <BatteryIcon $level={batteryLevel} $isCharging={isCharging} />
-                </BatteryContainer>
-                <HeaderLeft>
-                  <Circle $size={70}>
-                    <Avatar
-                      src={chatbotLogo}
-                      alt="avatar"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png";
-                      }}
-                    />
-                  </Circle>
-                  <StatusBlock>
-                    <BotName>Aza AI</BotName>
-                    <Status>AI Fashion Assistant</Status>
-                  </StatusBlock>
-                </HeaderLeft>
-                <CloseBtn
-                  onClick={() => {
-                    if (true && audioObject) {
-                      audioObject.pause(); // optional: stop audio on close
-                    }
-                    // Reset auto-play flag when chat is closed
-                    greetingAutoPlayed.current = false;
-                    if (chatboxRef.current) {
-                      chatboxRef.current.classList.add("closing");
-                      setTimeout(() => setShowChat(false), 500);
-                    } else {
-                      setShowChat(false);
-                    }
+          <Chatbox ref={chatboxRef}>
+            <Header>
+              <HeaderLeft>
+                <Avatar
+                  src={chatbotLogo}
+                  alt="avatar"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png";
                   }}
-                >
-                  ×
-                </CloseBtn>
-              </Header>
+                />
+                <StatusBlock>
+                  <BotName>Supa Agent</BotName>
+                  <Status>AI Assistant</Status>
+                </StatusBlock>
+              </HeaderLeft>
+              <CloseBtn
+                onClick={() => {
+                  if (true && audioObject) {
+                    audioObject.pause(); // optional: stop audio on close
+                  }
+                  // Reset auto-play flag when chat is closed
+                  greetingAutoPlayed.current = false;
+                  if (chatboxRef.current) {
+                    chatboxRef.current.classList.add("closing");
+                    setTimeout(() => setShowChat(false), 500);
+                  } else {
+                    setShowChat(false);
+                  }
+                }}
+              >
+                ×
+              </CloseBtn>
+            </Header>
 
-              <ChatContainer>
-                <>
-                  <MessagesContainer ref={messagesContainerRef}>
-                    {chatHistory.map((msg, idx) => (
-                      <MessageWrapper key={idx} $isUser={msg.sender === "user"}>
-                        {/* {msg.sender === "bot" && (
+            <ChatContainer>
+              <>
+                <MessagesContainer ref={messagesContainerRef}>
+                  {chatHistory.map((msg, idx) => (
+                    <MessageWrapper key={idx} $isUser={msg.sender === "user"}>
+                      {/* {msg.sender === "bot" && (
               <BotAvatar src="https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png" />
              )} */}
-                        <div>
-                          <MessageBubble $isUser={msg.sender === "user"}>
-                            {/* Conditional rendering for typewriter effect with markdown support - ONLY for bot messages */}
-                            {msg.sender === "bot" &&
-                            idx === chatHistory.length - 1 &&
-                            !isTyping &&
-                            animatedMessageIdx !== idx ? (
-                              <TypewriterMarkdown
-                                text={msg.text}
-                                onComplete={() => setAnimatedMessageIdx(idx)}
-                                speed={15}
+                      <div>
+                        <MessageBubble $isUser={msg.sender === "user"}>
+                          {/* 👇 MODIFICATION START: Conditional rendering for typewriter effect */}
+                          {msg.sender === "bot" &&
+                          idx === chatHistory.length - 1 &&
+                          !isTyping &&
+                          animatedMessageIdx !== idx ? (
+                            <TypeAnimation
+                              key={idx}
+                              sequence={[
+                                stripMarkdown(msg.text),
+                                () => setAnimatedMessageIdx(idx),
+                              ]}
+                              wrapper="span"
+                              cursor={false}
+                              speed={80}
+                              style={{ display: "inline-block" }}
+                              repeat={0}
+                            />
+                          ) : (
+                            <ReactMarkdown
+                              components={{
+                                a: ({ node, ...props }) => (
+                                  <a
+                                    {...props}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      padding: "0", // ❌ Remove default padding
+                                      color: "#1e90ff",
+                                      textDecoration: "none",
+                                      transition: "all 0.2s ease-in-out",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.target.style.textDecoration =
+                                        "underline";
+                                      e.target.style.color = "#0f62fe"; // 💡 Optional hover color
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.target.style.textDecoration = "none";
+                                      e.target.style.color = "#1e90ff";
+                                    }}
+                                  />
+                                ),
+                                p: ({ node, ...props }) => (
+                                  <p
+                                    style={{ margin: "0", padding: "0" }}
+                                    {...props}
+                                  />
+                                ),
+                              }}
+                            >
+                              {msg.text}
+                            </ReactMarkdown>
+                          )}
+                          {/* 👆 MODIFICATION END */}
+                        </MessageBubble>
+
+                        {/* Product Cards */}
+                        {msg.sender === "bot" && msg.product_cards && (
+                          <ProductCardsComponent
+                            productCards={msg.product_cards}
+                          />
+                        )}
+
+                        <MessageActions $isUser={msg.sender === "user"}>
+                          {msg.sender === "bot" && msg.audio && (
+                            <PlayButton
+                              onClick={() => playAudio(msg.audio, idx)}
+                              disabled={isTyping}
+                            >
+                              {currentlyPlaying === idx ? (
+                                <FaStopCircle />
+                              ) : (
+                                <FaVolumeUp />
+                              )}
+                            </PlayButton>
+                          )}
+                          <Timestamp>
+                            {new Date().toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Timestamp>
+                        </MessageActions>
+                      </div>
+                    </MessageWrapper>
+                  ))}
+
+                  {isTyping && (
+                    <MessageWrapper $isUser={false}>
+                      {/* <BotAvatar src="https://raw.githubusercontent.com/troika-tech/Asset/53e29e1748a7b203eaf3895581cfa4aac341f016/Supa%20Agent.svg" /> */}
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                        }}
+                      >
+                        <TypingContainer>
+                          <Loader />
+                          <CreativeLoadingText />
+                        </TypingContainer>
+                      </div>
+                    </MessageWrapper>
+                  )}
+
+                  {/* Inline Auth Request */}
+                  {showInlineAuthInput && (
+                    <MessageWrapper $isUser={false}>
+                      <div>
+                        <MessageBubble $isUser={false}>
+                          <div style={{ marginBottom: "12px" }}>
+                            Please enter your{" "}
+                            {authMethod === "email"
+                              ? "email address"
+                              : "WhatsApp number"}{" "}
+                            to continue chatting with us
+                          </div>
+
+                          {authMethod === "email" ? (
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                alignItems: "center",
+                              }}
+                            >
+                              <input
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) =>
+                                  setEmail(e.target.value.trim())
+                                }
+                                style={{
+                                  flex: 1,
+                                  padding: "10px 12px",
+                                  border: "1px solid #ddd",
+                                  borderRadius: "8px",
+                                  fontSize: "14px",
+                                  outline: "none",
+                                }}
                               />
-                            ) : (
-                              <ReactMarkdown
-                                components={{
-                                  a: ({ node, ...props }) => (
-                                    <a
-                                      {...props}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{
-                                        padding: "0",
-                                        color: "#1e90ff",
-                                        textDecoration: "none",
-                                        transition: "all 0.2s ease-in-out",
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.target.style.textDecoration =
-                                          "underline";
-                                        e.target.style.color = "#0f62fe";
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.target.style.textDecoration = "none";
-                                        e.target.style.color = "#1e90ff";
-                                      }}
-                                    />
-                                  ),
-                                  p: ({ node, ...props }) => (
-                                    <p
-                                      style={{ margin: "0", padding: "0" }}
-                                      {...props}
-                                    />
-                                  ),
+                              <button
+                                onClick={handleSendOtp}
+                                disabled={
+                                  loadingOtp || !email || resendTimeout > 0
+                                }
+                                style={{
+                                  padding: "10px 16px",
+                                  background:
+                                    loadingOtp || !email || resendTimeout > 0
+                                      ? "#ccc"
+                                      : "#bc3d19",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  cursor:
+                                    loadingOtp || !email || resendTimeout > 0
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
                                 }}
                               >
-                                {msg.text}
-                              </ReactMarkdown>
-                            )}
-                          </MessageBubble>
-
-                          {/* Product Cards */}
-                          {msg.sender === "bot" && msg.product_cards && (
-                            <ProductCardsComponent
-                              productCards={msg.product_cards}
-                            />
-                          )}
-
-                          <MessageActions $isUser={msg.sender === "user"}>
-                            {msg.sender === "bot" && msg.audio && (
-                              <PlayButton
-                                onClick={() => playAudio(msg.audio, idx)}
-                                disabled={isTyping}
-                              >
-                                {currentlyPlaying === idx ? (
-                                  <FaStopCircle />
+                                {loadingOtp ? (
+                                  <>
+                                    <ClipLoader size={12} color="#fff" />
+                                    Sending...
+                                  </>
+                                ) : resendTimeout > 0 ? (
+                                  `Resend in ${resendTimeout}s`
                                 ) : (
-                                  <FaVolumeUp />
+                                  <IoSend size={16} />
                                 )}
-                              </PlayButton>
-                            )}
-                            <Timestamp>
-                              {new Date().toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </Timestamp>
-                          </MessageActions>
-                        </div>
-                      </MessageWrapper>
-                    ))}
-
-                    {isTyping && (
-                      <MessageWrapper $isUser={false}>
-                        {/* <BotAvatar src="https://raw.githubusercontent.com/troika-tech/Asset/53e29e1748a7b203eaf3895581cfa4aac341f016/Supa%20Agent.svg" /> */}
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                          }}
-                        >
-                          <TypingContainer>
-                            <Loader />
-                            <CreativeLoadingText />
-                          </TypingContainer>
-                        </div>
-                      </MessageWrapper>
-                    )}
-
-                    {/* Inline Auth Request */}
-                    {showInlineAuthInput && (
-                      <MessageWrapper $isUser={false}>
-                        <div>
-                          <MessageBubble $isUser={false}>
-                            <div style={{ marginBottom: "12px" }}>
-                              Please enter your{" "}
-                              {authMethod === "email"
-                                ? "email address"
-                                : "WhatsApp number"}{" "}
-                              to continue chatting with us
+                              </button>
                             </div>
-
-                            {authMethod === "email" ? (
+                          ) : (
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                alignItems: "center",
+                              }}
+                            >
                               <div
                                 style={{
                                   display: "flex",
-                                  gap: "8px",
                                   alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
+                                <span
+                                  style={{ fontSize: "14px", color: "#666" }}
+                                >
+                                  +91
+                                </span>
                                 <input
-                                  type="email"
-                                  placeholder="Enter your email"
-                                  value={email}
-                                  onChange={(e) =>
-                                    setEmail(e.target.value.trim())
-                                  }
+                                  type="tel"
+                                  placeholder="Enter WhatsApp number"
+                                  value={phone}
+                                  onChange={(e) => {
+                                    const inputPhone = e.target.value.replace(
+                                      /\D/g,
+                                      ""
+                                    );
+                                    setPhone(inputPhone);
+                                    setIsPhoneValid(
+                                      /^[6-9]\d{9}$/.test(inputPhone)
+                                    );
+                                  }}
                                   style={{
-                                    flex: 1,
+                                    width: "140px",
                                     padding: "10px 12px",
                                     border: "1px solid #ddd",
                                     borderRadius: "8px",
@@ -3959,359 +3401,277 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                     outline: "none",
                                   }}
                                 />
-                                <button
-                                  onClick={handleSendOtp}
-                                  disabled={
-                                    loadingOtp || !email || resendTimeout > 0
-                                  }
-                                  style={{
-                                    padding: "10px 16px",
-                                    background:
-                                      loadingOtp || !email || resendTimeout > 0
-                                        ? "#ccc"
-                                        : "#bc3d19",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "8px",
-                                    fontSize: "14px",
-                                    fontWeight: "600",
-                                    cursor:
-                                      loadingOtp || !email || resendTimeout > 0
-                                        ? "not-allowed"
-                                        : "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                  }}
-                                >
-                                  {loadingOtp ? (
-                                    <>
-                                      <ClipLoader size={12} color="#fff" />
-                                      Sending...
-                                    </>
-                                  ) : resendTimeout > 0 ? (
-                                    `Resend in ${resendTimeout}s`
-                                  ) : (
-                                    <IoSend size={16} />
-                                  )}
-                                </button>
                               </div>
-                            ) : (
-                              <div
+                              <button
+                                onClick={handleSendOtp}
+                                disabled={
+                                  loadingOtp ||
+                                  !isPhoneValid ||
+                                  resendTimeout > 0
+                                }
                                 style={{
-                                  display: "flex",
-                                  gap: "8px",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                  }}
-                                >
-                                  <span
-                                    style={{ fontSize: "14px", color: "#666" }}
-                                  >
-                                    +91
-                                  </span>
-                                  <input
-                                    type="tel"
-                                    placeholder="Enter WhatsApp number"
-                                    value={phone}
-                                    onChange={(e) => {
-                                      const inputPhone = e.target.value.replace(
-                                        /\D/g,
-                                        ""
-                                      );
-                                      setPhone(inputPhone);
-                                      setIsPhoneValid(
-                                        /^[6-9]\d{9}$/.test(inputPhone)
-                                      );
-                                    }}
-                                    style={{
-                                      width: "140px",
-                                      padding: "10px 12px",
-                                      border: "1px solid #ddd",
-                                      borderRadius: "8px",
-                                      fontSize: "14px",
-                                      outline: "none",
-                                    }}
-                                  />
-                                </div>
-                                <button
-                                  onClick={handleSendOtp}
-                                  disabled={
+                                  padding: "10px 16px",
+                                  background:
                                     loadingOtp ||
                                     !isPhoneValid ||
                                     resendTimeout > 0
-                                  }
-                                  style={{
-                                    padding: "10px 16px",
-                                    background:
-                                      loadingOtp ||
-                                      !isPhoneValid ||
-                                      resendTimeout > 0
-                                        ? "#ccc"
-                                        : "#bc3d19",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "8px",
-                                    fontSize: "14px",
-                                    fontWeight: "600",
-                                    cursor:
-                                      loadingOtp ||
-                                      !isPhoneValid ||
-                                      resendTimeout > 0
-                                        ? "not-allowed"
-                                        : "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                  }}
-                                >
-                                  {loadingOtp ? (
-                                    <>
-                                      <ClipLoader size={12} color="#fff" />
-                                    </>
-                                  ) : resendTimeout > 0 ? (
-                                    `Resend in ${resendTimeout}s`
-                                  ) : (
-                                    <IoSend size={16} />
-                                  )}
-                                </button>
-                              </div>
-                            )}
-                          </MessageBubble>
-                        </div>
-                      </MessageWrapper>
-                    )}
-
-                    {/* OTP Verification */}
-                    {showOtpInput && (
-                      <MessageWrapper $isUser={false}>
-                        <div>
-                          <MessageBubble $isUser={false}>
-                            <div style={{ marginBottom: "12px" }}>
-                              We've sent a 6-digit code to{" "}
-                              {authMethod === "email"
-                                ? email
-                                : phone + " on WhatsApp"}
-                              . Please enter it below:
+                                      ? "#ccc"
+                                      : "#bc3d19",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  cursor:
+                                    loadingOtp ||
+                                    !isPhoneValid ||
+                                    resendTimeout > 0
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                }}
+                              >
+                                {loadingOtp ? (
+                                  <>
+                                    <ClipLoader size={12} color="#fff" />
+                                  </>
+                                ) : resendTimeout > 0 ? (
+                                  `Resend in ${resendTimeout}s`
+                                ) : (
+                                  <IoSend size={16} />
+                                )}
+                              </button>
                             </div>
-
-                            <OtpInputComponent otp={otp} setOtp={setOtp} />
-
-                            <button
-                              onClick={handleVerifyOtp}
-                              disabled={loadingVerify || otp.length !== 6}
-                              style={{
-                                width: "100%",
-                                marginTop: "12px",
-                                padding: "12px",
-                                background:
-                                  loadingVerify || otp.length !== 6
-                                    ? "#ccc"
-                                    : "#bc3d19",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "8px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                cursor:
-                                  loadingVerify || otp.length !== 6
-                                    ? "not-allowed"
-                                    : "pointer",
-                              }}
-                            >
-                              {loadingVerify ? "Verifying..." : "Verify Code"}
-                            </button>
-
-                            <div
-                              style={{
-                                marginTop: "8px",
-                                fontSize: "12px",
-                                color: "#666",
-                                textAlign: "center",
-                              }}
-                            >
-                              {resendTimeout > 0 ? (
-                                <>
-                                  Resend available in{" "}
-                                  <strong>{resendTimeout}s</strong>
-                                </>
-                              ) : (
-                                <>
-                                  Didn't receive the code?{" "}
-                                  <span
-                                    onClick={handleSendOtp}
-                                    style={{
-                                      color: "#bc3d19",
-                                      cursor: "pointer",
-                                      textDecoration: "underline",
-                                    }}
-                                  >
-                                    Resend Code
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </MessageBubble>
-                        </div>
-                      </MessageWrapper>
-                    )}
-
-                    <div ref={endOfMessagesRef} />
-                  </MessagesContainer>
-
-                  {/* Recording indicator above input */}
-                  {isRecording && (
-                    <VoiceInputIndicator>
-                      <RecordingBars isVisible={isRecording} />
-                      <ListeningText>Listening...</ListeningText>
-                    </VoiceInputIndicator>
+                          )}
+                        </MessageBubble>
+                      </div>
+                    </MessageWrapper>
                   )}
 
-                  <InputContainer>
-                    <InputWrapper>
-                      <ChatInput
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder={
-                          isTyping
-                            ? "Thinking..."
-                            : freeMessagesExhausted && !verified
-                            ? "Please authenticate to continue..."
-                            : "Message..."
-                        }
+                  {/* OTP Verification */}
+                  {showOtpInput && (
+                    <MessageWrapper $isUser={false}>
+                      <div>
+                        <MessageBubble $isUser={false}>
+                          <div style={{ marginBottom: "12px" }}>
+                            We've sent a 6-digit code to{" "}
+                            {authMethod === "email"
+                              ? email
+                              : phone + " on WhatsApp"}
+                            . Please enter it below:
+                          </div>
+
+                          <OtpInputComponent otp={otp} setOtp={setOtp} />
+
+                          <button
+                            onClick={handleVerifyOtp}
+                            disabled={loadingVerify || otp.length !== 6}
+                            style={{
+                              width: "100%",
+                              marginTop: "12px",
+                              padding: "12px",
+                              background:
+                                loadingVerify || otp.length !== 6
+                                  ? "#ccc"
+                                  : "#bc3d19",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              cursor:
+                                loadingVerify || otp.length !== 6
+                                  ? "not-allowed"
+                                  : "pointer",
+                            }}
+                          >
+                            {loadingVerify ? "Verifying..." : "Verify Code"}
+                          </button>
+
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              fontSize: "12px",
+                              color: "#666",
+                              textAlign: "center",
+                            }}
+                          >
+                            {resendTimeout > 0 ? (
+                              <>
+                                Resend available in{" "}
+                                <strong>{resendTimeout}s</strong>
+                              </>
+                            ) : (
+                              <>
+                                Didn't receive the code?{" "}
+                                <span
+                                  onClick={handleSendOtp}
+                                  style={{
+                                    color: "#bc3d19",
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                  }}
+                                >
+                                  Resend Code
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </MessageBubble>
+                      </div>
+                    </MessageWrapper>
+                  )}
+
+                  <div ref={endOfMessagesRef} />
+                </MessagesContainer>
+
+                {/* Recording indicator above input */}
+                {isRecording && (
+                  <VoiceInputIndicator>
+                    <RecordingBars isVisible={isRecording} />
+                    <ListeningText>Listening...</ListeningText>
+                  </VoiceInputIndicator>
+                )}
+
+                <InputContainer>
+                  <InputWrapper>
+                    <ChatInput
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder={
+                        isTyping
+                          ? "Thinking..."
+                          : freeMessagesExhausted && !verified
+                          ? "Please authenticate to continue..."
+                          : "Message..."
+                      }
+                      disabled={
+                        isTyping || (freeMessagesExhausted && !verified)
+                      }
+                      style={{
+                        opacity:
+                          isTyping || (freeMessagesExhausted && !verified)
+                            ? 0.6
+                            : 1,
+                        cursor:
+                          isTyping || (freeMessagesExhausted && !verified)
+                            ? "not-allowed"
+                            : "text",
+                      }}
+                    />
+                    <InputButtons>
+                      <VoiceButton
+                        $isRecording={isRecording}
+                        onClick={handleMicClick}
+                        onTouchStart={handleMicTouchStart}
+                        onTouchEnd={handleMicTouchEnd}
+                        onMouseDown={handleMicMouseDown}
+                        onMouseUp={handleMicMouseUp}
                         disabled={
                           isTyping || (freeMessagesExhausted && !verified)
                         }
-                        style={{
-                          opacity:
-                            isTyping || (freeMessagesExhausted && !verified)
-                              ? 0.6
-                              : 1,
-                          cursor:
-                            isTyping || (freeMessagesExhausted && !verified)
-                              ? "not-allowed"
-                              : "text",
-                        }}
-                      />
-                      <InputButtons>
-                        <VoiceButton
-                          $isRecording={isRecording}
-                          onClick={handleMicClick}
-                          onTouchStart={handleMicTouchStart}
-                          onTouchEnd={handleMicTouchEnd}
-                          onMouseDown={handleMicMouseDown}
-                          onMouseUp={handleMicMouseUp}
-                          disabled={
-                            isTyping || (freeMessagesExhausted && !verified)
-                          }
-                        >
-                          {isRecording && !isMobile ? <FiSquare /> : <FiMic />}
-                        </VoiceButton>
-                        <MuteButton
-                          $isMuted={isMuted}
-                          onClick={toggleMute}
-                          disabled={
-                            isTyping || (freeMessagesExhausted && !verified)
-                          }
-                        >
-                          {isMuted ? <FiVolumeX /> : <FiVolume2 />}
-                        </MuteButton>
-                        <SendButton
-                          onClick={() => !isTyping && handleSendMessage()}
-                          disabled={
-                            isTyping || (freeMessagesExhausted && !verified)
-                          }
-                        >
-                          <FiArrowUp />
-                        </SendButton>
-                      </InputButtons>
-                    </InputWrapper>
+                      >
+                        {isRecording && !isMobile ? <FiSquare /> : <FiMic />}
+                      </VoiceButton>
+                      <MuteButton
+                        $isMuted={isMuted}
+                        onClick={toggleMute}
+                        disabled={
+                          isTyping || (freeMessagesExhausted && !verified)
+                        }
+                      >
+                        {isMuted ? <FiVolumeX /> : <FiVolume2 />}
+                      </MuteButton>
+                      <SendButton
+                        onClick={() => !isTyping && handleSendMessage()}
+                        disabled={
+                          isTyping || (freeMessagesExhausted && !verified)
+                        }
+                      >
+                        <IoSend />
+                      </SendButton>
+                    </InputButtons>
+                  </InputWrapper>
 
-                    {/* Instructions (hide when gated) */}
+                  {/* Instructions (hide when gated) */}
 
-                    <p
+                  <p
+                    style={{
+                      textAlign: "center",
+                      color: "#888",
+                      fontSize: "0.75rem",
+                      margin: "0.5rem 0 0 0",
+                    }}
+                  >
+                    <span
                       style={{
-                        textAlign: "center",
-                        color: "#888",
-                        fontSize: "0.75rem",
-                        margin: "0.5rem 0 0 0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "0.5rem",
+                        flexWrap: "wrap",
+                        lineHeight: "1.2",
                       }}
                     >
-                      <span
+                      <span style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Powered by</strong>
+                      </span>
+                      <a
+                        href="https://troikatech.in/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
+                          color: "inherit",
+                          textDecoration: "none",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          gap: "0.5rem",
-                          flexWrap: "wrap",
-                          lineHeight: "1.2",
+                          gap: "0.25rem",
                         }}
                       >
-                        <span style={{ display: "flex", alignItems: "center" }}>
-                          <strong>Powered by</strong>
-                        </span>
-                        <a
-                          href="https://troikatech.in/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "inherit",
-                            textDecoration: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                          }}
-                        >
-                          <img
-                            src="https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/logo.png"
-                            alt="Troika Tech Logo"
-                            style={{ height: "14px", verticalAlign: "middle" }}
-                          />
-                          <strong>Troika</strong>
-                        </a>
-                        <span
-                          style={{
-                            color: "#888",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong>&</strong>
-                        </span>
-                        <a
-                          href="https://openai.com/chatgpt"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "inherit",
-                            textDecoration: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                          }}
-                        >
-                          <img
-                            src="https://img.icons8.com/?size=100&id=FBO05Dys9QCg&format=png&color=000000"
-                            alt="ChatGPT Logo"
-                            style={{ height: "14px", verticalAlign: "middle" }}
-                          />
-                          <strong>ChatGPT</strong>
-                        </a>
+                        <img
+                          src="https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/logo.png"
+                          alt="Troika Tech Logo"
+                          style={{ height: "14px", verticalAlign: "middle" }}
+                        />
+                        <strong>Troika</strong>
+                      </a>
+                      <span
+                        style={{
+                          color: "#888",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <strong>&</strong>
                       </span>
-                    </p>
-                  </InputContainer>
-                </>
-              </ChatContainer>
-              <div className="gesture-bar" />
-            </Chatbox>
-          </DeviceFrame>
+                      <a
+                        href="https://openai.com/chatgpt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "inherit",
+                          textDecoration: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                      >
+                        <img
+                          src="https://img.icons8.com/?size=100&id=FBO05Dys9QCg&format=png&color=000000"
+                          alt="ChatGPT Logo"
+                          style={{ height: "14px", verticalAlign: "middle" }}
+                        />
+                        <strong>ChatGPT</strong>
+                      </a>
+                    </span>
+                  </p>
+                </InputContainer>
+              </>
+            </ChatContainer>
+          </Chatbox>
 
           <ToastContainer position="top-center" />
         </Overlay>
