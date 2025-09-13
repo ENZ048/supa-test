@@ -10,7 +10,7 @@ import styled, { keyframes, createGlobalStyle } from "styled-components";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiMail, FiArrowRight, FiArrowUp, FiSearch } from "react-icons/fi";
+import { FiMail, FiArrowUp } from "react-icons/fi";
 import { FaVolumeUp, FaStopCircle } from "react-icons/fa";
 import { TypeAnimation } from "react-type-animation";
 import { IoSend } from "react-icons/io5";
@@ -359,135 +359,135 @@ const TypewriterMarkdown = ({ text, onComplete, speed = 20 }) => {
 };
 
 const GlobalStyle = createGlobalStyle`
-  * {
-    font-family: "Hanken Grotesk", "Amaranth", "Poppins", sans-serif;
-  }
-
-  /* Cosmic Circle Pulse Animation */
-.cosmic-circle {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cosmic-core {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, #60a5fa 30%, #a855f7 70%, transparent 100%);
-  box-shadow: 
-    0 0 20px #60a5fa,
-    0 0 40px #a855f7,
-    0 0 60px #ffffff,
-    inset 0 0 20px rgba(255, 255, 255, 0.3);
-  animation: core-glow 2s ease-in-out infinite alternate;
-  z-index: 3;
-}
-
-.pulse-ring {
-  position: absolute;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  animation: pulse-expand 3s ease-out infinite;
-}
-
-.pulse-ring-1 {
-  width: 80px;
-  height: 80px;
-  border-color: rgba(96, 165, 250, 0.6);
-  animation-delay: 0s;
-}
-
-.pulse-ring-2 {
-  width: 120px;
-  height: 120px;
-  border-color: rgba(168, 85, 247, 0.4);
-  animation-delay: 1s;
-}
-
-.pulse-ring-3 {
-  width: 160px;
-  height: 160px;
-  border-color: rgba(255, 255, 255, 0.3);
-  animation-delay: 2s;
-}
-
-@keyframes core-glow {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.8;
-    box-shadow: 
-      0 0 15px #60a5fa,
-      0 0 30px #a855f7,
-      0 0 45px #ffffff,
-      inset 0 0 15px rgba(255, 255, 255, 0.2);
-  }
-  100% {
-    transform: scale(1.1);
-    opacity: 1;
-    box-shadow: 
-      0 0 25px #60a5fa,
-      0 0 50px #a855f7,
-      0 0 75px #ffffff,
-      inset 0 0 25px rgba(255, 255, 255, 0.4);
-  }
-}
-
-@keyframes pulse-expand {
-  0% {
-    transform: scale(0.5);
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1.2);
-    opacity: 0;
-  }
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
+    * {
+      font-family: "Hanken Grotesk", "Amaranth", "Poppins", sans-serif;
+    }
+  
+    /* Cosmic Circle Pulse Animation */
   .cosmic-circle {
-    width: 150px;
-    height: 150px;
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .cosmic-core {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #60a5fa 30%, #a855f7 70%, transparent 100%);
+    box-shadow: 
+      0 0 20px #60a5fa,
+      0 0 40px #a855f7,
+      0 0 60px #ffffff,
+      inset 0 0 20px rgba(255, 255, 255, 0.3);
+    animation: core-glow 2s ease-in-out infinite alternate;
+    z-index: 3;
+  }
+  
+  .pulse-ring {
+    position: absolute;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    animation: pulse-expand 3s ease-out infinite;
   }
   
   .pulse-ring-1 {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
+    border-color: rgba(96, 165, 250, 0.6);
+    animation-delay: 0s;
   }
   
   .pulse-ring-2 {
-    width: 90px;
-    height: 90px;
+    width: 120px;
+    height: 120px;
+    border-color: rgba(168, 85, 247, 0.4);
+    animation-delay: 1s;
   }
   
   .pulse-ring-3 {
-    width: 120px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
+    border-color: rgba(255, 255, 255, 0.3);
+    animation-delay: 2s;
   }
-}
-
-.cosmic-circle {
-  will-change: transform;
-}
-
-.cosmic-core, .pulse-ring {
-  will-change: transform, opacity;
-}
-
-`;
+  
+  @keyframes core-glow {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.8;
+      box-shadow: 
+        0 0 15px #60a5fa,
+        0 0 30px #a855f7,
+        0 0 45px #ffffff,
+        inset 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+    100% {
+      transform: scale(1.1);
+      opacity: 1;
+      box-shadow: 
+        0 0 25px #60a5fa,
+        0 0 50px #a855f7,
+        0 0 75px #ffffff,
+        inset 0 0 25px rgba(255, 255, 255, 0.4);
+    }
+  }
+  
+  @keyframes pulse-expand {
+    0% {
+      transform: scale(0.5);
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .cosmic-circle {
+      width: 150px;
+      height: 150px;
+    }
+    
+    .cosmic-core {
+      width: 30px;
+      height: 30px;
+    }
+    
+    .pulse-ring-1 {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .pulse-ring-2 {
+      width: 90px;
+      height: 90px;
+    }
+    
+    .pulse-ring-3 {
+      width: 120px;
+      height: 120px;
+    }
+  }
+  
+  .cosmic-circle {
+    will-change: transform;
+  }
+  
+  .cosmic-core, .pulse-ring {
+    will-change: transform, opacity;
+  }
+  
+  `;
 
 const Wrapper = styled.div`
   @keyframes slideOut {
@@ -573,8 +573,8 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 96vh;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -597,22 +597,23 @@ const Chatbox = styled.div`
   max-width: 380px; /* Decreased from 420px */
   height: 95vh; /* Adjusted for better viewport fit */
   max-height: 700px;
-  background-color: #fff6f0;
 
-  /* 2. Layer multiple radial gradients for the aura effect */
-  background-image:
-    /* Top-left aura using your accent color #BC3D19 */ radial-gradient(
-      ellipse 60% 50% at -10% 20%,
-      /* Shape and position */ rgba(188, 61, 25, 0.2),
-      /* The color with transparency */ transparent 80%
-        /* Fade to transparent */
-    ),
-    /* Bottom-left aura using white to mimic the light green area */
-      radial-gradient(
-        ellipse 70% 55% at 40% 110%,
-        /* Shape and position */ rgba(255, 255, 255, 0.9),
-        /* White with transparency */ transparent 80% /* Fade to transparent */
-      );
+  @media (max-width: 768px) and (max-height: 642px) {
+    max-width: 320px; /* Reduced width for 768x642 dimension */
+  }
+
+  @media (max-width: 768px) {
+    max-width: 350px; /* Reduced width for tablet devices */
+  }
+
+  @media (max-width: 480px) {
+    max-width: 332px; /* Reduced width for mobile devices (340 - 8px bezel) */
+  }
+  background: linear-gradient(
+    135deg,
+    rgb(235, 224, 255) 0%,
+    rgb(215, 255, 252) 100%
+  );
 
   /* Make sure the background stays fixed while content scrolls */
   background-attachment: fixed;
@@ -620,7 +621,7 @@ const Chatbox = styled.div`
   /* Increased rounding for chat window */
   border-radius: 30px;
   /* Remove heavy outer shadow; let frame handle it */
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -642,10 +643,17 @@ const DeviceFrame = styled.div`
   margin: 0 auto; /* Center the frame on all screen sizes */
   padding: 8px 4px; /* Slimmer left/right bezel */
   border-radius: 36px; /* Adjusted for slimmer profile */
-  background: #050505; /* Outer bezel */
-  background-image: radial-gradient(circle at 35% 25%, #121212 0%, #050505 70%);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32), 0 2px 5px rgba(0, 0, 0, 0.22),
-    0 0 0 1px #0a0a0a; /* Subtle outline */
+
+  @media (max-width: 768px) and (max-height: 642px) {
+    max-width: 328px; /* Adjusted for narrower chat (320 + 4 + 4) */
+  }
+
+  @media (max-width: 768px) {
+    max-width: 358px; /* Adjusted for narrower chat (350 + 4 + 4) */
+  }
+  background: rgb(0, 0, 0); /* Clean white device frame */
+  box-shadow: 0 4px 18px rgba(138, 43, 226, 0.15),
+    0 2px 5px rgba(20, 184, 166, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.2); /* Black border outline */
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -665,8 +673,9 @@ const DeviceFrame = styled.div`
     inset: 2px;
     border-radius: 32px;
     pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04),
-      inset 0 0 5px rgba(0, 0, 0, 0.5), inset 0 0 2px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15),
+      inset 0 0 5px rgba(138, 43, 226, 0.05),
+      inset 0 0 2px rgba(20, 184, 166, 0.05);
   }
 
   /* iPhone-like notch/Dynamic Island */
@@ -678,9 +687,10 @@ const DeviceFrame = styled.div`
     transform: translateX(-50%);
     width: 100px;
     height: 28px;
-    background: #000;
+    background: rgb(0, 0, 0);
     border-radius: 16px;
     z-index: 50;
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.2);
   }
 
   /* Bottom gesture bar */
@@ -693,15 +703,15 @@ const DeviceFrame = styled.div`
     height: 4px;
     background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.35),
-      rgba(255, 255, 255, 0.15)
+      rgba(138, 43, 226, 0.3),
+      rgba(20, 184, 166, 0.2)
     );
     border-radius: 3px;
     filter: blur(0.2px);
   }
 
   @media (max-width: 480px) {
-    max-width: 388px; /* Keep consistent width, don't expand to 100% */
+    max-width: 340px; /* Reduced width for mobile devices */
     padding: 8px 4px; /* Keep consistent bezel thickness */
     border-radius: 30px;
     &:after {
@@ -729,12 +739,12 @@ const PowerButton = styled.div`
   top: 185px;
   width: 10px;
   height: 60px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
+  background: rgb(0, 0, 0);
   border-radius: 4px 0 0 4px;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 6px rgba(138, 43, 226, 0.3), 0 2px 8px rgba(138, 43, 226, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: -1;
   pointer-events: none;
 
   @media (max-width: 480px) {
@@ -752,12 +762,12 @@ const VolumeUpButton = styled.div`
   top: 195px;
   width: 10px;
   height: 35px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
+  background: rgb(0, 0, 0);
   border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 6px rgba(138, 43, 226, 0.3), 0 2px 8px rgba(138, 43, 226, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: -1;
   pointer-events: none;
 
   @media (max-width: 480px) {
@@ -774,12 +784,12 @@ const VolumeDownButton = styled.div`
   top: 240px;
   width: 10px;
   height: 35px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
+  background: rgb(0, 0, 0);
   border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 6px rgba(138, 43, 226, 0.3), 0 2px 8px rgba(138, 43, 226, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: -1;
   pointer-events: none;
 
   @media (max-width: 480px) {
@@ -797,12 +807,12 @@ const SilentSwitch = styled.div`
   top: 155px;
   width: 10px;
   height: 20px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #000000 100%);
+  background: rgb(0, 0, 0);
   border-radius: 0 4px 4px 0;
-  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.1),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  z-index: 100;
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 6px rgba(138, 43, 226, 0.3), 0 2px 8px rgba(138, 43, 226, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: -1;
   pointer-events: none;
 
   @media (max-width: 480px) {
@@ -866,10 +876,14 @@ const StatusBlock = styled.div`
 
 const BotName = styled.div`
   font-weight: 800;
-  color: #bc3d19;
+  background: rgb(0, 0, 0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 1.25rem;
   text-align: center;
   line-height: 1.1;
+  margin-bottom: 0.5rem;
 
   @media (max-width: 480px) {
     font-size: 0.9rem;
@@ -878,25 +892,8 @@ const BotName = styled.div`
 
 const Status = styled.div`
   font-size: 0.7rem;
-  color: #666;
+  color: rgb(0, 0, 0);
   text-align: center;
-`;
-
-const CloseBtn = styled.div`
-  position: absolute;
-  top: 0.1rem; /* Reverted to original position */
-  right: 1rem;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
-  color: #333;
-  transition: transform 0.3s ease-in-out, color 0.2s ease;
-  z-index: 10;
-
-  &:hover {
-    transform: rotate(90deg);
-    color: #666;
-  }
 `;
 
 const ChatContainer = styled.div`
@@ -951,7 +948,7 @@ const InputContainer = styled.div`
 const ChatInput = styled.input`
   /* reserve enough space on the right for the icon buttons to avoid overlap */
   padding: 1rem 140px 1rem 0.75rem;
-  border: 1px solid #ccc;
+  border: 1px solid #dee2e6;
   border-radius: 25px;
   font-size: 0.875rem;
   width: 100%;
@@ -960,7 +957,8 @@ const ChatInput = styled.input`
   transition: border-color 0.3s;
   background: white;
   &:focus {
-    border-color: #bc3d19;
+    border-color: #8a2be2;
+    box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
   }
 `;
 
@@ -986,118 +984,43 @@ const InputButtons = styled.div`
   }
 `;
 
+// MessageWrapper (if you need it)
 const MessageWrapper = styled.div`
   display: flex;
   align-items: flex-end;
+  position: relative;
   margin: 0.625rem 0;
   justify-content: ${(props) => (props.$isUser ? "flex-end" : "flex-start")};
   padding: ${(props) => (props.$isUser ? "0 12px 0 0" : "0 0 0 12px")};
-
-  & > div {
-    display: flex;
-    flex-direction: column;
-    align-items: ${(props) => (props.$isUser ? "flex-end" : "flex-start")};
-    max-width: 80%; /* Prevent messages from being too wide */
-  }
+  overflow: visible; /* important so tail can render outside */
 `;
 
 const MessageBubble = styled.div`
-  padding: 12px 20px;
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
   font-size: 1rem;
-  line-height: 1.5;
+  line-height: 1.4;
   word-wrap: break-word;
-  max-width: 90%;
-  overflow: visible;
+  max-width: 75%;
   position: relative;
+  margin: 0.5rem 0;
+  width: fit-content;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Conditional styles for the USER's message (right side) */
-  ${(props) =>
-    props.$isUser
+  ${({ $isUser }) =>
+    $isUser
       ? `
-    background: #000000;
-    color: white;
-    align-self: flex-end; /* Aligns the bubble to the right */
-    /* top-left | top-right | bottom-right | bottom-left */
-    border-radius: 22px 22px 5px 22px; 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    
-    /* Message tail for user (pointing right) */
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      right: -8px;
-      width: 0;
-      height: 0;
-      border-left: 15px solid #000000;
-      border-top: 15px solid transparent;
-      border-bottom: 0px solid transparent;
-    }
+    background: #000;
+    color: #fff;
+    align-self: flex-end;
   `
       : `
-  /* Conditional styles for the BOT's message (left side) */
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    color: black;
-    align-self: flex-start; /* Aligns the bubble to the left */
-    /* top-left | top-right | bottom-right | bottom-left */
-    border-radius: 22px 22px 22px 5px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    
-    /* Message tail for bot (pointing left) */
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: -8px;
-      width: 0;
-      height: 0;
-      border-right: 15px solid rgba(255, 255, 255, 0.9);
-      border-top: 15px solid transparent;
-      border-bottom: 0px solid transparent;
-    }
+    background: #fff;
+    color: #000;
+    align-self: flex-start;
   `}
 `;
 
-const WelcomeMessageBubble = styled.div`
-  padding: 12px 20px;
-  font-size: 1rem;
-  line-height: 1.5;
-  word-wrap: break-word;
-  max-width: 90%;
-  overflow: visible;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  /* Bot message styling */
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  color: black;
-  align-self: flex-start;
-  border-radius: 22px 22px 22px 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  /* Message tail for bot (pointing left) */
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: -8px;
-    width: 0;
-    height: 0;
-    border-right: 15px solid rgba(255, 255, 255, 0.9);
-    border-top: 15px solid transparent;
-    border-bottom: 0px solid transparent;
-  }
-`;
-
-const SearchIcon = styled(FiSearch)`
-  color: #bc3d19;
-  font-size: 16px;
-  flex-shrink: 0;
-`;
 
 // A simple flex container is needed to make alignment work
 const MessageContainer = styled.div`
@@ -1109,15 +1032,15 @@ const MessageContainer = styled.div`
 
 const Timestamp = styled.span`
   font-size: 0.625rem;
-  color: #888;
+  color: rgb(0, 0, 0);
   margin-top: 0.375rem;
 `;
 
 const glow = keyframes`
- 0% { box-shadow: 0 0 0px #cc33ff; }
- 50% { box-shadow: 0 0 12px #cc33ff; }
- 100% { box-shadow: 0 0 0px #cc33ff; }
-`;
+   0% { box-shadow: 0 0 0px #cc33ff; }
+   50% { box-shadow: 0 0 12px #cc33ff; }
+   100% { box-shadow: 0 0 0px #cc33ff; }
+  `;
 
 // otp conatainer
 
@@ -1143,7 +1066,7 @@ const Back = styled.div`
 const Shield = styled.div`
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #a855f7, #ec4899);
+  background: linear-gradient(135deg, #8a2be2, #14b8a6);
   border-radius: 50%;
   margin: 0 auto 24px auto;
   display: flex;
@@ -1153,7 +1076,10 @@ const Shield = styled.div`
 `;
 
 const OtpTitle = styled.h2`
-  color: #a855f7;
+  background: linear-gradient(135deg, #8a2be2, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 600;
@@ -1167,7 +1093,7 @@ const SubText = styled.p`
 `;
 
 const EmailText = styled.p`
-  color: #a855f7;
+  color: #8a2be2;
   font-weight: 600;
   margin: 0 0 32px 0;
   font-size: 14px;
@@ -1188,16 +1114,16 @@ const OtpInputBox = styled.input`
   font-weight: 600;
   text-align: center;
   border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #dee2e6;
   background: #f9fafb;
   color: #111827;
   outline: none;
   transition: all 0.2s ease;
 
   &:focus {
-    border-color: #a855f7;
+    border-color: #8a2be2;
     background: white;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.1);
   }
 
   &::-webkit-outer-spin-button,
@@ -1212,7 +1138,7 @@ const OtpInputBox = styled.input`
 `;
 
 const VerifyButton = styled.button`
-  background: linear-gradient(135deg, #bc3d19, rgba(188, 61, 25, 0.8));
+  background: linear-gradient(135deg, #8a2be2, #14b8a6);
   color: white;
   font-weight: 600;
   font-size: 14px;
@@ -1226,7 +1152,7 @@ const VerifyButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(188, 61, 25, 0.3);
+    box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
   }
 
   &:disabled {
@@ -1243,19 +1169,19 @@ const ResendLink = styled.p`
   line-height: 1.4;
 
   span {
-    color: #a855f7;
+    color: #8a2be2;
     cursor: pointer;
     font-weight: 600;
     text-decoration: underline;
 
     &:hover {
-      color: #9333ea;
+      color: #14b8a6;
     }
   }
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #0d9488 100%);
   border: none;
   border-radius: 50%;
   width: 36px;
@@ -1272,7 +1198,7 @@ const SendButton = styled.button`
   transition: all 0.3s ease;
   flex-shrink: 0;
   padding: 0;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(138, 43, 226, 0.3);
   aspect-ratio: 1;
 
   svg {
@@ -1287,8 +1213,8 @@ const SendButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: scale(1.1);
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #14532d 100%);
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    background: linear-gradient(135deg, #7c3aed 0%, #0d9488 100%);
+    box-shadow: 0 4px 12px rgba(138, 43, 226, 0.4);
   }
 
   &:disabled {
@@ -1301,12 +1227,12 @@ const SendButton = styled.button`
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2);
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2);
   }
 `;
 
@@ -1322,19 +1248,12 @@ const MuteButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: ${(props) => (props.$isMuted ? "#ef4444" : "#BC3D19")};
+  color: #8a2be2;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  outline: none;
-
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
-
-  &:focus-visible {
-    outline: none;
-  }
+  position: relative;
+  z-index: 9999; /* Higher than overlay */
+  transform: scale(1);
 
   svg {
     color: inherit;
@@ -1344,7 +1263,7 @@ const MuteButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: scale(1.1);
-    color: ${(props) => (props.$isMuted ? "#dc2626" : "#ff6b6b")};
+    color: #14b8a6;
   }
 
   &:disabled {
@@ -1352,80 +1271,14 @@ const MuteButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
-`;
 
-const floatUnit = keyframes`
- 0%, 100% {
-  transform: translateY(0px);
- }
- 50% {
-  transform: translateY(-6px);
- }
-`;
-
-const FloatingUnit = styled.div`
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: ${floatUnit} 3s ease-in-out infinite;
-
-  @media (max-width: 480px) {
-    bottom: 0.5rem;
-    right: 0.5rem;
-  }
-`;
-
-const Label = styled.div`
-  background: #bc3d19;
-  // background: hsla(205, 46%, 30%, 1);
-  // background: linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // background: -moz-linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // background: -webkit-linear-gradient(
-  //   90deg,
-  //   hsla(205, 46%, 30%, 1) 0%,
-  //   hsla(260, 29%, 36%, 1) 100%
-  // );
-  // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#295270", endColorstr="#524175", GradientType=1);
-  color: #fff;
-  padding: 4px 35px; /* Adjusted padding */
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1rem; /* Adjusted font size */
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transform: translate(3px, -4px);
-  margin-bottom: 0.5rem; /* Added margin */
-`;
-
-const ChatButton = styled.button`
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.1);
+  &:focus {
+    outline: none;
+    box-shadow: none;
   }
 
-  img {
-    width: auto;
-    height: 90px; /* Adjusted size */
-    @media (max-width: 480px) {
-      height: 70px; /* Smaller on mobile */
-    }
+  &:focus-visible {
+    outline: none;
   }
 `;
 
@@ -1441,7 +1294,7 @@ const VoiceButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: ${(props) => (props.$isRecording ? "#ef4444" : "#BC3D19")};
+  color: ${(props) => (props.$isRecording ? "#ef4444" : "#8a2be2")};
   transition: all 0.3s ease;
   flex-shrink: 0;
   position: relative;
@@ -1452,8 +1305,8 @@ const VoiceButton = styled.button`
   ${(props) =>
     props.$isRecording &&
     `
-    animation: pulse 1s infinite;
-  `}
+      animation: pulse 1s infinite;
+    `}
 
   @keyframes pulse {
     0% {
@@ -1475,7 +1328,7 @@ const VoiceButton = styled.button`
 
   &:hover:not(:disabled) {
     transform: ${(props) => (props.$isRecording ? "scale(1.2)" : "scale(1.1)")};
-    color: ${(props) => (props.$isRecording ? "#dc2626" : "#ff6b6b")};
+    color: ${(props) => (props.$isRecording ? "#dc2626" : "#14b8a6")};
   }
 
   &:disabled {
@@ -1504,7 +1357,7 @@ const MessageActions = styled.div`
 
 const PlayButton = styled.button`
   cursor: pointer;
-  color: #bc3d19;
+  color: #8a2be2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1527,6 +1380,7 @@ const PlayButton = styled.button`
 
   &:hover {
     transform: scale(1.1);
+    color: #14b8a6;
   }
 
   &:disabled {
@@ -1534,495 +1388,6 @@ const PlayButton = styled.button`
     transform: none;
   }
 `;
-
-const ProductCardsContainer = styled.div`
-  margin-top: 12px;
-  width: calc(100% + 40px);
-  margin-left: -20px;
-  margin-right: -20px;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  overflow: visible;
-  box-sizing: border-box;
-  max-width: none !important;
-
-  @media (max-width: 480px) {
-    width: calc(100% + 40px);
-    margin-left: -20px;
-    margin-right: -20px;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-`;
-
-const ProductCarousel = styled.div`
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 8px 20px;
-  scroll-behavior: smooth;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  width: 100%;
-  justify-content: flex-start;
-
-  /* Hide scrollbar completely */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Firefox */
-  scrollbar-width: none;
-
-  /* Prevent text selection during drag */
-  &.dragging {
-    scroll-behavior: auto;
-  }
-`;
-
-const ProductCard = styled.div`
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  width: 280px;
-  flex-shrink: 0;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    border-color: #bc3d19;
-    background: linear-gradient(
-      135deg,
-      #ffffff 0%,
-      rgba(188, 61, 25, 0.02) 100%
-    );
-  }
-
-  @media (max-width: 480px) {
-    min-width: 240px;
-    max-width: 240px;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-
-    &:hover {
-      transform: none;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      border-color: #bc3d19;
-      background: linear-gradient(
-        135deg,
-        #ffffff 0%,
-        rgba(188, 61, 25, 0.02) 100%
-      );
-    }
-  }
-`;
-
-const ProductImage = styled.img`
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  object-position: top;
-  background: #f9fafb;
-
-  @media (max-width: 480px) {
-    height: 140px;
-  }
-`;
-
-const ProductContent = styled.div`
-  padding: 12px;
-
-  @media (max-width: 480px) {
-    padding: 10px;
-  }
-`;
-
-const ProductTitle = styled.h3`
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 6px 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-
-  @media (max-width: 480px) {
-    font-size: 12px;
-    margin: 0 0 4px 0;
-  }
-`;
-
-const ProductPrice = styled.div`
-  font-size: 14px;
-  font-weight: 700;
-  color: #059669;
-  margin-bottom: 6px;
-
-  @media (max-width: 480px) {
-    font-size: 13px;
-    margin-bottom: 4px;
-  }
-`;
-
-const ProductSizes = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  margin-bottom: 8px;
-
-  @media (max-width: 480px) {
-    gap: 2px;
-    margin-bottom: 6px;
-  }
-`;
-
-const SizeTag = styled.span`
-  background: #f3f4f6;
-  color: #374151;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: 500;
-
-  @media (max-width: 480px) {
-    padding: 1px 3px;
-    font-size: 9px;
-  }
-`;
-
-const ProductLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #bc3d19;
-  color: white;
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(188, 61, 25, 0.3);
-    background: linear-gradient(135deg, #bc3d19, rgba(188, 61, 25, 0.9));
-    color: #fff8f0;
-  }
-
-  @media (max-width: 480px) {
-    padding: 5px 8px;
-    font-size: 10px;
-    gap: 3px;
-
-    &:hover {
-      transform: none;
-    }
-  }
-`;
-
-const CarouselButton = styled.button`
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  max-width: 40px;
-  max-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #000000;
-  font-size: 20px;
-  font-weight: bold;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  padding: 0;
-  margin: 0;
-  line-height: 1;
-
-  ${(props) => (props.$side === "left" ? "left: 10px;" : "right: -60px;")}
-
-  &:hover:not(:disabled) {
-    transform: translateY(-50%) scale(1.1);
-    color: #bc3d19;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    border-color: rgba(188, 61, 25, 0.3);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(-50%) scale(0.95);
-  }
-
-  &:focus-visible {
-    outline: 2px solid rgba(188, 61, 25, 0.5);
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    color: #999999;
-  }
-
-  svg {
-    width: 28px;
-    height: 28px;
-    color: currentColor;
-    fill: currentColor;
-    stroke: currentColor;
-    stroke-width: 1;
-  }
-
-  @media (max-width: 480px) {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
-
-    svg {
-      width: 24px;
-      height: 24px;
-    }
-  }
-`;
-
-// Product Card Component
-const ProductCardComponent = ({ product }) => {
-  const formatPrice = (price) => {
-    if (!price) return "Price not available";
-    const numPrice = parseInt(price);
-    if (isNaN(numPrice)) return "Price not available";
-    return `₹${numPrice.toLocaleString("en-IN")}`;
-  };
-
-  return (
-    <ProductCard>
-      <ProductImage
-        src={
-          product.image || "https://via.placeholder.com/300x200?text=No+Image"
-        }
-        alt={product.title || "Product"}
-        onError={(e) => {
-          e.target.src =
-            "https://via.placeholder.com/300x200?text=Image+Not+Available";
-        }}
-      />
-      <ProductContent>
-        <ProductTitle>
-          {product.title || "Product Title Not Available"}
-        </ProductTitle>
-        <ProductPrice>{formatPrice(product.price)}</ProductPrice>
-        {product.available_sizes && product.available_sizes.length > 0 && (
-          <ProductSizes>
-            {product.available_sizes.slice(0, 6).map((size, index) => (
-              <SizeTag key={index}>{size}</SizeTag>
-            ))}
-            {product.available_sizes.length > 6 && (
-              <SizeTag>+{product.available_sizes.length - 6} more</SizeTag>
-            )}
-          </ProductSizes>
-        )}
-        {product.url && (
-          <ProductLink
-            href={product.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            View Product
-            <FiArrowRight size={12} />
-          </ProductLink>
-        )}
-      </ProductContent>
-    </ProductCard>
-  );
-};
-
-// Product Cards Container Component
-const ProductCardsComponent = ({ productCards }) => {
-  const carouselRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const totalCards = productCards?.cards?.length ?? 0;
-
-  const scrollLeftArrow = () => {
-    if (carouselRef.current) {
-      const cardWidth = 280 + 12; // card width + gap
-      carouselRef.current.scrollBy({
-        left: -cardWidth,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const scrollRightArrow = () => {
-    if (carouselRef.current) {
-      const cardWidth = 280 + 12; // card width + gap
-      carouselRef.current.scrollBy({
-        left: cardWidth,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  // Determine if we can scroll left/right (for disabling buttons and edge fades)
-  const updateScrollState = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const maxScrollLeft = el.scrollWidth - el.clientWidth - 1; // -1 to account for rounding
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft < maxScrollLeft);
-  }, []);
-
-  // Drag functionality
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
-    carouselRef.current.style.cursor = "grabbing";
-    carouselRef.current.classList.add("dragging");
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-    if (carouselRef.current) {
-      carouselRef.current.style.cursor = "grab";
-      carouselRef.current.classList.remove("dragging");
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    if (carouselRef.current) {
-      carouselRef.current.style.cursor = "grab";
-      carouselRef.current.classList.remove("dragging");
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Multiply for faster scrolling
-    carouselRef.current.scrollLeft = scrollLeft - walk;
-    updateScrollState();
-  };
-
-  // Touch events for mobile
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
-    carouselRef.current.classList.add("dragging");
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.touches[0].pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    carouselRef.current.scrollLeft = scrollLeft - walk;
-    updateScrollState();
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (carouselRef.current) {
-      carouselRef.current.classList.remove("dragging");
-    }
-  };
-
-  // Cleanup drag state on unmount
-  useEffect(() => {
-    updateScrollState();
-    const el = carouselRef.current;
-    if (!el) return;
-    const onScroll = () => updateScrollState();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    // Also update on resize as widths change
-    const onResize = () => updateScrollState();
-    window.addEventListener("resize", onResize);
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      if (el) el.classList.remove("dragging");
-    };
-  }, [updateScrollState]);
-
-  return (
-    <ProductCardsContainer>
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            overflow: "visible",
-            flex: 1,
-            boxSizing: "border-box",
-          }}
-        >
-          <CarouselButton
-            $side="left"
-            onClick={scrollLeftArrow}
-            title="Previous products"
-            aria-label="Previous products"
-            disabled={!canScrollLeft}
-          >
-            ‹
-          </CarouselButton>
-          <CarouselButton
-            $side="right"
-            onClick={scrollRightArrow}
-            title="Next products"
-            aria-label="Next products"
-            disabled={!canScrollRight}
-          >
-            ›
-          </CarouselButton>
-
-          <ProductCarousel
-            ref={carouselRef}
-            onMouseDown={handleMouseDown}
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={handleMouseUp}
-            onMouseMove={handleMouseMove}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{
-              cursor: isDragging ? "grabbing" : "grab",
-            }}
-          >
-            {(productCards?.cards ?? []).map((product, index) => (
-              <ProductCardComponent key={index} product={product} />
-            ))}
-          </ProductCarousel>
-        </div>
-      </div>
-    </ProductCardsContainer>
-  );
-};
 
 // --- Your React components (OtpInputComponent, SupaChatbot) remain here ---
 // ... No changes needed for the component logic, only for the styled-components ...
@@ -2170,7 +1535,10 @@ const CreativeLoadingText = () => {
 };
 
 const LoadingTextWrapper = styled.div`
-  color: #bc3d19;
+  background: #000000;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 14px;
   font-weight: 500;
   opacity: 0.8;
@@ -2210,7 +1578,7 @@ const StyledWrapper = styled.div`
     height: 8px;
     position: absolute;
     border-radius: 50%;
-    background-color: #bc3d19;
+    background: #000000;
     left: 15%;
     transform-origin: 50%;
     animation: typing-circle7124 0.5s alternate infinite ease;
@@ -2250,7 +1618,7 @@ const StyledWrapper = styled.div`
     width: 5px;
     height: 4px;
     border-radius: 50%;
-    background-color: rgba(188, 61, 25, 0.2);
+    background-color: rgba(138, 43, 226, 0.2);
     position: absolute;
     top: 30px;
     transform-origin: 50%;
@@ -2300,7 +1668,7 @@ const RecordingBarsContainer = styled.div`
 const RecordingBar = styled.div`
   width: 3px;
   height: 100%;
-  background: #000000;
+  background: linear-gradient(135deg, #8a2be2, #14b8a6);
   border-radius: 2px;
   animation: recordingPulse 1s ease-in-out infinite;
 
@@ -2328,7 +1696,10 @@ const VoiceInputIndicator = styled.div`
 
 const ListeningText = styled.div`
   font-size: 0.8rem;
-  color: #000000;
+  background: linear-gradient(135deg, #8a2be2, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-top: 8px;
   font-weight: 500;
   animation: textGlow 2s ease-in-out infinite alternate;
@@ -2357,9 +1728,55 @@ const RecordingBars = ({ isVisible }) => {
   );
 };
 
-// Static welcome message
-function getStaticGreeting() {
-  return "Search here for products, brand and more";
+// Function to get time-based greeting messages
+function getTimeBasedGreeting() {
+  const now = new Date();
+  const hour = now.getHours();
+
+  const morningGreetings = [
+    "☀️ Good morning! Ready to kickstart your business today?",
+    "Morning! A fresh day = fresh ideas. What can I solve for you?",
+    "Rise & shine—let’s make your business smarter today.",
+  ];
+
+  const afternoonGreetings = [
+    "Hey 👋 Hope your day’s going well! Need a quick business boost?",
+    "Welcome! Perfect time for a smart solution—shall we start?",
+    "Good afternoon! Tell me what’s bugging you, I’ll fix it fast.",
+  ];
+
+  const eveningGreetings = [
+    "Evenings are for smart moves ✨ What’s on your mind?",
+    "Hey! Don’t worry if it’s late—business doesn’t sleep, and neither do I.",
+    "Good evening! Ready to make your next big business move?",
+  ];
+
+  const lateNightGreetings = [
+    "🌙 Burning the midnight oil? I’m here to help.",
+    "You’re up late, and so am I. Let’s get things done.",
+    "Insomniac or hustler? Either way—I’ve got your back.",
+  ];
+
+  let selectedGreetings;
+
+  if (hour >= 6 && hour < 12) {
+    // Morning (6 AM – 11 AM)
+    selectedGreetings = morningGreetings;
+  } else if (hour >= 12 && hour < 18) {
+    // Afternoon (12 PM – 5 PM)
+    selectedGreetings = afternoonGreetings;
+  } else if (hour >= 18 && hour < 24) {
+    // Evening/Night (6 PM – 11 PM)
+    selectedGreetings = eveningGreetings;
+  } else {
+    // Late Night (12 AM – 5 AM)
+    selectedGreetings = lateNightGreetings;
+  }
+
+  // Return a random greeting from the selected time period
+  return selectedGreetings[
+    Math.floor(Math.random() * selectedGreetings.length)
+  ];
 }
 
 const Clock = styled.div`
@@ -2384,7 +1801,7 @@ const BatteryContainer = styled.div`
   gap: 4px; /* Restored gap between percentage and battery */
   font-size: 0.85rem; /* iPhone-style smaller font */
   font-weight: 600;
-  color: #000000; /* Pure black like iPhone */
+  color: #495057; /* Dark gray like iPhone */
   z-index: 20;
   pointer-events: none;
   user-select: none;
@@ -2398,7 +1815,7 @@ const BatteryContainer = styled.div`
 const BatteryIcon = styled.div`
   width: 25px; /* Back to standard iPhone proportions */
   height: 13px;
-  border: 1px solid #000000;
+  border: 1px solid #adb5bd;
   border-radius: 3px;
   position: relative;
   background: transparent;
@@ -2410,7 +1827,7 @@ const BatteryIcon = styled.div`
     top: 4px;
     width: 3px;
     height: 5px;
-    background: #000000;
+    background: #6c757d;
     border-radius: 0 2px 2px 0;
   }
 
@@ -2433,13 +1850,13 @@ const BatteryIcon = styled.div`
     ${(props) =>
       props.$isCharging &&
       `
-      animation: chargingPulse 2s ease-in-out infinite;
-      
-      @keyframes chargingPulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
-      }
-    `}
+        animation: chargingPulse 2s ease-in-out infinite;
+        
+        @keyframes chargingPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+      `}
   }
 
   @media (max-width: 480px) {
@@ -2492,7 +1909,7 @@ const BatteryPercentage = styled.span`
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.3px;
-  color: #000000; /* Pure black like iPhone */
+  color: #495057; /* Dark gray like iPhone */
 
   @media (max-width: 480px) {
     font-size: 0.8rem;
@@ -2500,7 +1917,7 @@ const BatteryPercentage = styled.span`
 `;
 
 const SupaChatbot = ({ chatbotId, apiBase }) => {
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true);
   // const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -2539,7 +1956,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [showInlineAuthInput, setShowInlineAuthInput] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [chatbotLogo, setChatbotLogo] = useState(
-    "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png"
+    "https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png"
   );
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -2547,7 +1964,10 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [isCharging, setIsCharging] = useState(false);
 
   const [finalGreetingReady, setFinalGreetingReady] = useState(false);
-  const [welcomeMessage, setWelcomeMessage] = useState(getStaticGreeting());
+  const [ttsGenerationInProgress, setTtsGenerationInProgress] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("Search here for products, brand and more");
+  const ttsGenerationTimeout = useRef(null);
+  const lastGeneratedGreeting = useRef(null);
 
   const recordingTimeout = useRef();
   const overlayRef = useRef(null);
@@ -2555,6 +1975,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const endOfMessagesRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const hasMounted = useRef(false);
+  const greetingAutoPlayed = useRef(false);
 
   const AUTH_GATE_KEY = (sid, bot) => `supa_auth_gate:${bot}:${sid}`;
   const SESSION_STORE_KEY = (method) =>
@@ -2614,22 +2035,106 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     }
   }, [sessionId, chatbotId, freeMessageLimit]);
 
-  // Function to generate TTS for greeting message - DISABLED
+  // Function to generate TTS for greeting message
   const generateGreetingTTS = useCallback(
     async (greetingText, retryCount = 0) => {
-      // TTS disabled for greeting message
+      if (!apiBase || ttsGenerationInProgress) return null;
+
+      // Audio is always enabled
+
+      setTtsGenerationInProgress(true);
+
+      try {
+        const response = await axios.post(`${apiBase}/text-to-speech`, {
+          text: greetingText,
+        });
+
+        if (response.data.audio) {
+          // Convert base64 data URL to the format expected by playAudio function
+          const base64Data = response.data.audio.replace(
+            "data:audio/mpeg;base64,",
+            ""
+          );
+          const byteArray = Array.from(atob(base64Data), (c) =>
+            c.charCodeAt(0)
+          );
+
+          return {
+            data: byteArray,
+            contentType: "audio/mpeg",
+          };
+        }
+      } catch (error) {
+        console.error("Failed to generate greeting TTS:", error);
+
+        // Retry mechanism for failed TTS generation
+        if (retryCount < 2) {
+          console.log(
+            `Retrying greeting TTS generation (attempt ${retryCount + 1})`
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (retryCount + 1))
+          ); // Exponential backoff
+          return generateGreetingTTS(greetingText, retryCount + 1);
+        }
+      } finally {
+        setTtsGenerationInProgress(false);
+      }
       return null;
     },
-    []
+    [apiBase, ttsGenerationInProgress]
   );
 
-  // Function to ensure greeting TTS is generated and updated in chat history - DISABLED
+  // Function to ensure greeting TTS is generated and updated in chat history
   const ensureGreetingTTS = useCallback(
     async (greetingText, forceUpdate = false) => {
-      // TTS disabled for greeting message - no action needed
-      return;
+      if (!apiBase || !greetingText) return;
+
+      // Check if we already generated TTS for this exact greeting
+      if (!forceUpdate && lastGeneratedGreeting.current === greetingText) {
+        return;
+      }
+
+      // Clear any existing timeout
+      if (ttsGenerationTimeout.current) {
+        clearTimeout(ttsGenerationTimeout.current);
+      }
+
+      // Debounce TTS generation to prevent rapid successive calls
+      ttsGenerationTimeout.current = setTimeout(async () => {
+        // Always generate TTS for the current greeting text, even if we have audio for a different greeting
+        const greetingAudio = await generateGreetingTTS(greetingText);
+        if (greetingAudio) {
+          // Mark this greeting as generated
+          lastGeneratedGreeting.current = greetingText;
+
+          // Update chat history with audio - ensure we're updating the correct greeting message
+          setChatHistory((prev) => {
+            if (prev.length === 0) {
+              // Create new greeting message with audio
+              return [
+                {
+                  sender: "bot",
+                  text: greetingText,
+                  audio: greetingAudio,
+                },
+              ];
+            } else {
+              // Update existing greeting message with audio
+              return prev.map((msg, index) => {
+                if (index === 0 && msg.sender === "bot") {
+                  return { ...msg, text: greetingText, audio: greetingAudio };
+                }
+                return msg;
+              });
+            }
+          });
+
+          // Auto-play will be handled by the useEffect that watches for audio changes
+        }
+      }, 500); // Increased debounce to 500ms
     },
-    []
+    [apiBase, generateGreetingTTS, showChat]
   );
 
   useEffect(() => {
@@ -2735,11 +2240,26 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     };
   }, [apiBase, chatbotId]);
 
-  // Generate TTS for initial greeting message - DISABLED
+  // Generate TTS for initial greeting message - works regardless of authentication
   useEffect(() => {
-    // TTS disabled for greeting message - no action needed
-    return;
-  }, [chatbotId, apiBase, chatHistory, ensureGreetingTTS]);
+    const generateInitialGreetingTTS = async () => {
+      if (
+        chatbotId &&
+        apiBase &&
+        chatHistory.length === 1 &&
+        chatHistory[0].sender === "bot" &&
+        !chatHistory[0].audio
+      ) {
+        const greetingText = chatHistory[0].text;
+        // Use a timeout to prevent immediate execution
+        setTimeout(() => {
+          ensureGreetingTTS(greetingText);
+        }, 200);
+      }
+    };
+
+    generateInitialGreetingTTS();
+  }, [chatbotId, apiBase, chatHistory, ensureGreetingTTS]); // Added ensureGreetingTTS dependency
 
   const handleSendOtp = async () => {
     if (resendTimeout > 0 || !authMethod) return;
@@ -2908,16 +2428,41 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     }
   }, [isMuted, audioObject]);
 
-  // Auto-play greeting TTS when chat opens - DISABLED
+  // Auto-play greeting TTS when chat opens - improved logic
   useEffect(() => {
-    // TTS disabled for greeting message - no auto-play
-    return;
+    if (
+      showChat &&
+      chatHistory.length === 1 &&
+      chatHistory[0].sender === "bot" &&
+      chatHistory[0].audio &&
+      !greetingAutoPlayed.current
+    ) {
+      greetingAutoPlayed.current = true;
+
+      // Small delay to ensure the chat is fully rendered
+      const timer = setTimeout(() => {
+        playAudio(chatHistory[0].audio, 0);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
   }, [showChat, chatHistory, playAudio]);
 
-  // Additional effect to handle late TTS generation and auto-play - DISABLED
+  // Additional effect to handle late TTS generation and auto-play
   useEffect(() => {
-    // TTS disabled for greeting message - no late auto-play
-    return;
+    if (
+      showChat &&
+      chatHistory.length === 1 &&
+      chatHistory[0].sender === "bot" &&
+      chatHistory[0].audio &&
+      !greetingAutoPlayed.current
+    ) {
+      // If we have audio but haven't played it yet, play it now
+      greetingAutoPlayed.current = true;
+      setTimeout(() => {
+        playAudio(chatHistory[0].audio, 0);
+      }, 100);
+    }
   }, [chatHistory, showChat, playAudio]);
 
   useEffect(() => {
@@ -3003,9 +2548,19 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     }
   }, [showChat, chatHistory.length, chatbotId, welcomeMessage]);
 
-  // Set static welcome message
+  // Update welcome message periodically to keep it dynamic
   useEffect(() => {
-    setWelcomeMessage(getStaticGreeting());
+    const updateWelcomeMessage = () => {
+      setWelcomeMessage(getTimeBasedGreeting());
+    };
+
+    // Update immediately
+    updateWelcomeMessage();
+
+    // Set up interval to update every hour
+    const interval = setInterval(updateWelcomeMessage, 60 * 60 * 1000); // 1 hour
+
+    return () => clearInterval(interval);
   }, []);
 
   // Check free message count when sessionId or chatbotId changes
@@ -3059,19 +2614,16 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
         });
         console.log("Backend response:", response.data);
 
-        const { answer, audio, requiresAuthNext, auth_method, product_cards } =
-          response.data;
+        const { answer, audio, requiresAuthNext, auth_method } = response.data;
 
         console.log("Answer length:", answer?.length);
         console.log("Full answer:", answer);
         console.log("Answer ends with:", answer?.slice(-50)); // Last 50 characters
-        console.log("Product cards:", product_cards);
 
         const botMessage = {
           sender: "bot",
           text: answer || "Sorry, I couldn't get that.",
           audio,
-          product_cards,
         };
         let botMessageIndex;
         setChatHistory((prev) => {
@@ -3464,10 +3016,14 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     setShowInlineAuthInput(false);
     setShowOtpInput(false);
     setFinalGreetingReady(false); // Reset final greeting ready state
+    lastGeneratedGreeting.current = null; // Reset TTS generation tracking
     localStorage.removeItem("resend_otp_start");
 
     // Reset chat history - will be populated when final greeting is ready
     setChatHistory([]);
+
+    // Reset auto-play flag for new chatbot
+    greetingAutoPlayed.current = false;
 
     // Reset final greeting ready state
     setFinalGreetingReady(false);
@@ -3565,7 +3121,11 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
         recordingTimeout.current = null;
       }
 
-      // TTS generation timeout cleanup removed (not needed for greeting)
+      // Cleanup TTS generation timeout
+      if (ttsGenerationTimeout.current) {
+        clearTimeout(ttsGenerationTimeout.current);
+        ttsGenerationTimeout.current = null;
+      }
     };
   }, [true]); // Add true dependency
 
@@ -3585,21 +3145,6 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   return (
     <Wrapper>
       <GlobalStyle />
-      {!showChat && (
-        <FloatingUnit>
-          <ChatButton onClick={() => setShowChat(true)}>
-            <img
-              src={chatbotLogo}
-              alt="Chat"
-              onError={(e) => {
-                e.target.src =
-                  "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png";
-              }}
-            />
-          </ChatButton>
-          <Label>Aza AI</Label>
-        </FloatingUnit>
-      )}
 
       {showChat && (
         <Overlay ref={overlayRef}>
@@ -3635,30 +3180,15 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                       alt="avatar"
                       onError={(e) => {
                         e.target.src =
-                          "https://raw.githubusercontent.com/troikatechindia/Asset/refs/heads/main/Aza%20AI.png";
+                          "https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png";
                       }}
                     />
                   </Circle>
                   <StatusBlock>
-                    <BotName>Aza AI</BotName>
-                    <Status>AI Fashion Assistant</Status>
+                    <BotName>Supa Agent</BotName>
+                    <Status>AI Assistant</Status>
                   </StatusBlock>
                 </HeaderLeft>
-                <CloseBtn
-                  onClick={() => {
-                    if (true && audioObject) {
-                      audioObject.pause(); // optional: stop audio on close
-                    }
-                    if (chatboxRef.current) {
-                      chatboxRef.current.classList.add("closing");
-                      setTimeout(() => setShowChat(false), 500);
-                    } else {
-                      setShowChat(false);
-                    }
-                  }}
-                >
-                  ×
-                </CloseBtn>
               </Header>
 
               <ChatContainer>
@@ -3667,72 +3197,57 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                     {chatHistory.map((msg, idx) => (
                       <MessageWrapper key={idx} $isUser={msg.sender === "user"}>
                         {/* {msg.sender === "bot" && (
-              <BotAvatar src="https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png" />
-             )} */}
+                <BotAvatar src="https://raw.githubusercontent.com/troika-tech/Asset/refs/heads/main/Supa%20Agent%20new.png" />
+               )} */}
                         <div>
-                          {/* Special welcome message bubble with search icon */}
-                          {msg.sender === "bot" && idx === 0 ? (
-                            <WelcomeMessageBubble>
-                              <SearchIcon />
-                              <span>{msg.text}</span>
-                            </WelcomeMessageBubble>
-                          ) : (
-                            <MessageBubble $isUser={msg.sender === "user"}>
-                              {/* Conditional rendering for typewriter effect with markdown support - ONLY for bot messages */}
-                              {msg.sender === "bot" &&
-                              idx === chatHistory.length - 1 &&
-                              !isTyping &&
-                              animatedMessageIdx !== idx ? (
-                                <TypewriterMarkdown
-                                  text={msg.text}
-                                  onComplete={() => setAnimatedMessageIdx(idx)}
-                                  speed={15}
-                                />
-                              ) : (
-                                <ReactMarkdown
-                                  components={{
-                                    a: ({ node, ...props }) => (
-                                      <a
-                                        {...props}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          padding: "0",
-                                          color: "#1e90ff",
-                                          textDecoration: "none",
-                                          transition: "all 0.2s ease-in-out",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.target.style.textDecoration =
-                                            "underline";
-                                          e.target.style.color = "#0f62fe";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.target.style.textDecoration = "none";
-                                          e.target.style.color = "#1e90ff";
-                                        }}
-                                      />
-                                    ),
-                                    p: ({ node, ...props }) => (
-                                      <p
-                                        style={{ margin: "0", padding: "0" }}
-                                        {...props}
-                                      />
-                                    ),
-                                  }}
-                                >
-                                  {msg.text}
-                                </ReactMarkdown>
-                              )}
-                            </MessageBubble>
-                          )}
-
-                          {/* Product Cards */}
-                          {msg.sender === "bot" && msg.product_cards && (
-                            <ProductCardsComponent
-                              productCards={msg.product_cards}
-                            />
-                          )}
+                          <MessageBubble $isUser={msg.sender === "user"}>
+                            {/* Conditional rendering for typewriter effect with markdown support - ONLY for bot messages */}
+                            {msg.sender === "bot" &&
+                            idx === chatHistory.length - 1 &&
+                            !isTyping &&
+                            animatedMessageIdx !== idx ? (
+                              <TypewriterMarkdown
+                                text={msg.text}
+                                onComplete={() => setAnimatedMessageIdx(idx)}
+                                speed={15}
+                              />
+                            ) : (
+                              <ReactMarkdown
+                                components={{
+                                  a: ({ node, ...props }) => (
+                                    <a
+                                      {...props}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        padding: "0",
+                                        color: "#1e90ff",
+                                        textDecoration: "none",
+                                        transition: "all 0.2s ease-in-out",
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.target.style.textDecoration =
+                                          "underline";
+                                        e.target.style.color = "#0f62fe";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.target.style.textDecoration = "none";
+                                        e.target.style.color = "#1e90ff";
+                                      }}
+                                    />
+                                  ),
+                                  p: ({ node, ...props }) => (
+                                    <p
+                                      style={{ margin: "0", padding: "0" }}
+                                      {...props}
+                                    />
+                                  ),
+                                }}
+                              >
+                                {msg.text}
+                              </ReactMarkdown>
+                            )}
+                          </MessageBubble>
 
                           <MessageActions $isUser={msg.sender === "user"}>
                             {msg.sender === "bot" && msg.audio && (
@@ -3807,7 +3322,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                   style={{
                                     flex: 1,
                                     padding: "10px 12px",
-                                    border: "1px solid #ddd",
+                                    border: "1px solid #dee2e6",
                                     borderRadius: "8px",
                                     fontSize: "14px",
                                     outline: "none",
@@ -3823,7 +3338,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                     background:
                                       loadingOtp || !email || resendTimeout > 0
                                         ? "#ccc"
-                                        : "#bc3d19",
+                                        : "linear-gradient(135deg, #8a2be2, #14b8a6)",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "8px",
@@ -3887,7 +3402,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                     style={{
                                       width: "140px",
                                       padding: "10px 12px",
-                                      border: "1px solid #ddd",
+                                      border: "1px solid #dee2e6",
                                       borderRadius: "8px",
                                       fontSize: "14px",
                                       outline: "none",
@@ -3908,7 +3423,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                       !isPhoneValid ||
                                       resendTimeout > 0
                                         ? "#ccc"
-                                        : "#bc3d19",
+                                        : "linear-gradient(135deg, #8a2be2, #14b8a6)",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "8px",
@@ -3967,7 +3482,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                 background:
                                   loadingVerify || otp.length !== 6
                                     ? "#ccc"
-                                    : "#bc3d19",
+                                    : "linear-gradient(135deg, #8a2be2, #14b8a6)",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "8px",
@@ -4001,7 +3516,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                                   <span
                                     onClick={handleSendOtp}
                                     style={{
-                                      color: "#bc3d19",
+                                      color: "#8a2be2",
                                       cursor: "pointer",
                                       textDecoration: "underline",
                                     }}
@@ -4093,9 +3608,9 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                     <p
                       style={{
                         textAlign: "center",
-                        color: "#888",
+                        color: "#000000",
                         fontSize: "0.75rem",
-                        margin: "0.5rem 0 0 0",
+                        margin: "0.8rem 0 0 0",
                       }}
                     >
                       <span
