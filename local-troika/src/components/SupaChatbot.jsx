@@ -18,6 +18,7 @@ import VoiceInputIndicatorComponent from "./VoiceInputIndicator";
 import InlineAuth from "./InlineAuth";
 import OtpVerification from "./OtpVerification";
 import InputArea from "./InputArea";
+import SuggestionButtons from "./SuggestionButtons";
 
 // Import styles
 import { Wrapper, Overlay, Chatbox, ChatContainer, MessagesContainer } from "../styles/MainStyles";
@@ -41,7 +42,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [verified, setVerified] = useState(false);
   const [loadingOtp, setLoadingOtp] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("I'm Interested");
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [animatedMessageIdx, setAnimatedMessageIdx] = useState(null);
@@ -72,6 +73,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [ttsGenerationInProgress, setTtsGenerationInProgress] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState(getTimeBasedGreeting());
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   // Removed greetingAudioReady state - no longer needed without autoplay
 
   // Refs
@@ -443,6 +445,32 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     }
   }, [sessionId, chatbotId, freeMessageLimit, checkFreeMessageLimit]);
 
+  // Show language notification on page load using toastify
+  useEffect(() => {
+    if (showChat && chatbotId) {
+      const timer = setTimeout(() => {
+        toast("🌐 You can chat with us in all the Indian languages!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: false,
+          style: {
+            background: 'white',
+            color: '#333',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          }
+        });
+      }, 1000); // Show after 1 second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [showChat, chatbotId]);
+
   // Handle free message exhaustion
   useEffect(() => {
     if (freeMessagesExhausted && !verified) {
@@ -737,6 +765,11 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     });
   };
 
+  const handleSuggestionClick = (suggestionText) => {
+    setMessage(suggestionText);
+    handleSendMessage(suggestionText);
+  };
+
 
   const handleSendMessage = useCallback(
     async (inputText) => {
@@ -759,6 +792,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       if (audioObject) audioObject.pause();
 
       setUserHasInteracted(true);
+      setShowSuggestions(false); // Hide suggestions after first interaction
       const userMessage = { sender: "user", text: textToSend };
       setChatHistory((prev) => [...prev, userMessage]);
       setMessage("");
@@ -1002,6 +1036,11 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                 </MessagesContainer>
 
                 <VoiceInputIndicatorComponent isRecording={isRecording} />
+
+                <SuggestionButtons 
+                  onSuggestionClick={handleSuggestionClick}
+                  isVisible={showSuggestions && !isTyping && chatHistory.length <= 1}
+                />
 
                 <InputArea
                   message={message}

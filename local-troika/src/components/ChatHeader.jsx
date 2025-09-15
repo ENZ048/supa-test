@@ -70,8 +70,26 @@ const BotName = styled.div`
 
 const Status = styled.div`
   font-size: 0.7rem;
-  color: rgb(0, 0, 0);
+  color: white;
   text-align: center;
+  background: linear-gradient(90deg, #d946ef, #f97316, #fbbd23);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 const Clock = styled.div`
