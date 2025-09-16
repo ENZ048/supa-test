@@ -12,6 +12,14 @@ const MessageWrapper = styled.div`
   justify-content: ${(props) => (props.$isUser ? "flex-end" : "flex-start")};
   padding: ${(props) => (props.$isUser ? "0 12px 0 0" : "0 0 0 12px")};
   overflow: visible; /* important so tail can render outside */
+
+  @media (max-width: 768px) {
+    margin: 0.375rem 0; /* Reduce margin on mobile */
+  }
+
+  @media (max-width: 480px) {
+    margin: 0.25rem 0; /* Further reduce margin on small mobile */
+  }
 `;
 
 const MessageBubble = styled.div`
@@ -20,7 +28,7 @@ const MessageBubble = styled.div`
   font-size: 1rem;
   line-height: 1.4;
   word-wrap: break-word;
-  max-width: 75%;
+  max-width: 76%;
   position: relative;
   margin: 0.5rem 0;
   width: fit-content;
@@ -156,8 +164,12 @@ const MessageBubbleComponent = ({
         <MessageActions $isUser={isUser}>
           {!isUser && message.audio && (
             <PlayButton
-              onClick={() => playAudio(message.audio, index)}
+              onClick={() => {
+                console.log(`Play button clicked for message ${index}, audio data:`, message.audio);
+                playAudio(message.audio, index);
+              }}
               disabled={isTyping}
+              title={currentlyPlaying === index ? "Stop audio" : "Play audio"}
             >
               {currentlyPlaying === index ? (
                 <FaStopCircle />
@@ -167,7 +179,10 @@ const MessageBubbleComponent = ({
             </PlayButton>
           )}
           <Timestamp>
-            {new Date().toLocaleTimeString([], {
+            {message.timestamp ? message.timestamp.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) : new Date().toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}

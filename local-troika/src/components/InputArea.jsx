@@ -22,6 +22,23 @@ const ChatInput = styled.input`
   outline: none;
   transition: border-color 0.3s;
   background: white;
+  color: #000;
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    background: #2d2d2d;
+    color: #ffffff;
+    border-color: #4a4a4a;
+  }
+  
+  /* Force visibility in all modes */
+  &::placeholder {
+    color: #666;
+    @media (prefers-color-scheme: dark) {
+      color: #999;
+    }
+  }
+  
   &:focus {
     border-color: #8a2be2;
     box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
@@ -136,6 +153,7 @@ const MuteButton = styled.button`
     color: #14b8a6;
   }
 
+
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -222,8 +240,9 @@ const InputArea = ({
   setMessage,
   handleKeyPress,
   isTyping,
-  freeMessagesExhausted,
+  userMessageCount,
   verified,
+  needsAuth,
   isRecording,
   isMuted,
   toggleMute,
@@ -233,8 +252,11 @@ const InputArea = ({
   handleMicMouseDown,
   handleMicMouseUp,
   isMobile,
-  handleSendMessage
+  handleSendMessage,
+  currentlyPlaying
 }) => {
+  const shouldDisable = isTyping || (userMessageCount >= 2 && !verified) || (needsAuth && !verified);
+  
   return (
     <InputContainer>
       <InputWrapper>
@@ -245,22 +267,14 @@ const InputArea = ({
           placeholder={
             isTyping
               ? "Thinking..."
-              : freeMessagesExhausted && !verified
+              : (userMessageCount >= 2 && !verified) || (needsAuth && !verified)
               ? "Please authenticate to continue..."
               : "Message..."
           }
-          disabled={
-            isTyping || (freeMessagesExhausted && !verified)
-          }
+          disabled={shouldDisable}
           style={{
-            opacity:
-              isTyping || (freeMessagesExhausted && !verified)
-                ? 0.6
-                : 1,
-            cursor:
-              isTyping || (freeMessagesExhausted && !verified)
-                ? "not-allowed"
-                : "text",
+            opacity: shouldDisable ? 0.6 : 1,
+            cursor: shouldDisable ? "not-allowed" : "text",
           }}
         />
         <InputButtons>
@@ -271,26 +285,30 @@ const InputArea = ({
             onTouchEnd={handleMicTouchEnd}
             onMouseDown={handleMicMouseDown}
             onMouseUp={handleMicMouseUp}
-            disabled={
-              isTyping || (freeMessagesExhausted && !verified)
-            }
+            disabled={shouldDisable}
+            title={isRecording ? "Stop recording" : "Start voice recording"}
           >
             {isRecording && !isMobile ? <FiSquare /> : <FiMic />}
           </VoiceButton>
           <MuteButton
             $isMuted={isMuted}
-            onClick={toggleMute}
-            disabled={
-              isTyping || (freeMessagesExhausted && !verified)
+            $isPlaying={currentlyPlaying !== null}
+            onClick={() => {
+              console.log(`Mute button clicked, current state: ${isMuted}`);
+              toggleMute();
+            }}
+            disabled={shouldDisable}
+            title={
+              currentlyPlaying !== null 
+                ? (isMuted ? "Unmute currently playing audio" : "Mute currently playing audio")
+                : (isMuted ? "Unmute audio" : "Mute audio")
             }
           >
             {isMuted ? <FiVolumeX /> : <FiVolume2 />}
           </MuteButton>
           <SendButton
             onClick={() => !isTyping && handleSendMessage()}
-            disabled={
-              isTyping || (freeMessagesExhausted && !verified)
-            }
+            disabled={shouldDisable}
           >
             <FiArrowUp />
           </SendButton>

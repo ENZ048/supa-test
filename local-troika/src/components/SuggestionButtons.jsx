@@ -6,8 +6,11 @@ const SuggestionContainer = styled.div`
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 `;
 
 const ButtonContent = styled.div`

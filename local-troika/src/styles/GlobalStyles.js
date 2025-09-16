@@ -129,6 +129,21 @@ const GlobalStyle = createGlobalStyle`
     will-change: transform, opacity;
   }
   
+  /* Dark mode support for auth inputs */
+  .auth-input {
+    @media (prefers-color-scheme: dark) {
+      background: #2d2d2d !important;
+      color: #ffffff !important;
+      border-color: #4a4a4a !important;
+    }
+  }
+  
+  .auth-input::placeholder {
+    @media (prefers-color-scheme: dark) {
+      color: #999 !important;
+    }
+  }
+  
   `;
 
 export default GlobalStyle;

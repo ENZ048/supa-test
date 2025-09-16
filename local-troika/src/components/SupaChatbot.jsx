@@ -60,9 +60,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [requireAuthText, setRequireAuthText] = useState(
     "Verify yourself to continue chat"
   );
-  const [freeMessageLimit, setFreeMessageLimit] = useState(1);
-  const [freeMessagesUsed, setFreeMessagesUsed] = useState(0);
-  const [freeMessagesExhausted, setFreeMessagesExhausted] = useState(false);
+  const [userMessageCount, setUserMessageCount] = useState(0);
   const [showInlineAuth, setShowInlineAuth] = useState(false);
   const [showInlineAuthInput, setShowInlineAuthInput] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
@@ -74,6 +72,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const [welcomeMessage, setWelcomeMessage] = useState(getTimeBasedGreeting());
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [hasShownInterestResponse, setHasShownInterestResponse] = useState(false);
   // Removed greetingAudioReady state - no longer needed without autoplay
 
   // Refs
@@ -86,69 +85,63 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   const hasMounted = useRef(false);
   const greetingAutoPlayed = useRef(false);
   const pendingGreetingAudio = useRef(null);
+  const languageMessageShown = useRef(false);
 
   // Custom hooks
   const { batteryLevel, isCharging } = useBattery();
   const currentTime = useClock();
-  const { playAudio, currentlyPlaying, audioObject } = useAudio(isMuted);
+  const { playAudio, stopAudio, currentlyPlaying, audioObject, toggleMuteForCurrentAudio } = useAudio(isMuted, hasUserInteracted);
   const { isRecording, startRecording, stopRecording } = useVoiceRecording(apiBase);
 
   // Constants
   const AUTH_GATE_KEY = (sid, bot) => `supa_auth_gate:${bot}:${sid}`;
   const SESSION_STORE_KEY = (method) =>
     method === "email" ? "chatbot_user_email" : "chatbot_user_phone";
-  const FREE_MESSAGES_KEY = (sid, bot) => `supa_free_messages:${bot}:${sid}`;
+  const USER_MESSAGE_COUNT_KEY = (sid, bot) => `supa_user_message_count:${bot}:${sid}`;
 
-  // Function to check and update free message count
-  const checkFreeMessageLimit = useCallback(() => {
+  // Function to check if user has sent 2 messages and needs auth
+  const checkUserMessageCount = useCallback(() => {
+    return userMessageCount >= 2;
+  }, [userMessageCount]);
+
+  // Function to load user message count from localStorage
+  const loadUserMessageCount = useCallback(() => {
     if (!sessionId || !chatbotId) {
-      return false;
+      console.log("loadUserMessageCount: sessionId or chatbotId not available", { sessionId, chatbotId });
+      return 0;
     }
-
+    
     try {
-      const stored = localStorage.getItem(
-        FREE_MESSAGES_KEY(sessionId, chatbotId)
-      );
-      const used = stored ? parseInt(stored, 10) : 0;
-      setFreeMessagesUsed(used);
-
-      if (used >= freeMessageLimit) {
-        setFreeMessagesExhausted(true);
-        return false;
-      }
-
-      setFreeMessagesExhausted(false);
-      return true;
+      const key = USER_MESSAGE_COUNT_KEY(sessionId, chatbotId);
+      const stored = localStorage.getItem(key);
+      const count = stored ? parseInt(stored, 10) : 0;
+      console.log("loadUserMessageCount: loaded count", { key, stored, count });
+      return count;
     } catch (error) {
-      console.error("Error checking free message limit:", error);
-      return false;
+      console.error("Error loading user message count:", error);
+      return 0;
     }
-  }, [sessionId, chatbotId, freeMessageLimit]);
+  }, [sessionId, chatbotId]);
 
-  // Function to increment free message count
-  const incrementFreeMessageCount = useCallback(() => {
-    if (!sessionId || !chatbotId) return;
-
-    try {
-      const stored = localStorage.getItem(
-        FREE_MESSAGES_KEY(sessionId, chatbotId)
-      );
-      const current = stored ? parseInt(stored, 10) : 0;
-      const newCount = current + 1;
-
-      localStorage.setItem(
-        FREE_MESSAGES_KEY(sessionId, chatbotId),
-        newCount.toString()
-      );
-      setFreeMessagesUsed(newCount);
-
-      if (newCount >= freeMessageLimit) {
-        setFreeMessagesExhausted(true);
+  // Function to increment user message count
+  const incrementUserMessageCount = useCallback(() => {
+    setUserMessageCount(prev => {
+      const newCount = prev + 1;
+      // Persist to localStorage
+      if (sessionId && chatbotId) {
+        try {
+          const key = `supa_user_message_count:${chatbotId}:${sessionId}`;
+          localStorage.setItem(key, newCount.toString());
+          console.log("incrementUserMessageCount: saved count", { key, newCount });
+        } catch (error) {
+          console.error("Error saving user message count:", error);
+        }
+      } else {
+        console.log("incrementUserMessageCount: sessionId or chatbotId not available", { sessionId, chatbotId });
       }
-    } catch (error) {
-      console.error("Error updating free message count:", error);
-    }
-  }, [sessionId, chatbotId, freeMessageLimit]);
+      return newCount;
+    });
+  }, [sessionId, chatbotId]);
 
   // Function to generate TTS for greeting message
   const generateGreetingTTS = useCallback(
@@ -224,12 +217,13 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                   sender: "bot",
                   text: greetingText,
                   audio: greetingAudio,
+                  timestamp: new Date(),
                 },
               ];
             } else {
               return prev.map((msg, index) => {
                 if (index === 0 && msg.sender === "bot") {
-                  return { ...msg, text: greetingText, audio: greetingAudio };
+                  return { ...msg, text: greetingText, audio: greetingAudio, timestamp: new Date() };
                 }
                 return msg;
               });
@@ -268,10 +262,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
         
         const cfg = data || {};
         const newAuthMethod = cfg.auth_method || "whatsapp";
-        const freeLimit =
-          typeof cfg.free_messages === "number" ? cfg.free_messages : 1;
         setAuthMethod(newAuthMethod);
-        setFreeMessageLimit(freeLimit);
         setRequireAuthText(
           cfg.require_auth_text || "Verify yourself to continue chat"
         );
@@ -308,14 +299,15 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
             const json = await res.json();
 
             if (json.valid) {
+              console.log("Valid session found, setting verified to true");
               if (newAuthMethod === "email") setEmail(saved);
               else setPhone(saved);
               setVerified(true);
               setNeedsAuth(false);
               setShowAuthScreen(false);
               setShowInlineAuth(false);
-              setFreeMessagesUsed(0);
-              setFreeMessagesExhausted(false);
+              // Don't reset userMessageCount here - let it be handled by the auth flow
+              setHasShownInterestResponse(false);
               
               // Only set chat history if it's empty (to avoid overriding existing greeting)
               setChatHistory(prev => {
@@ -324,6 +316,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                     {
                       sender: "bot",
                       text: welcomeMessage,
+                      timestamp: new Date(),
                     },
                   ];
                 }
@@ -351,6 +344,9 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
             setNeedsAuth(true);
             setShowInlineAuth(true);
           }
+        } else {
+          // No saved session, check if user needs auth based on message count
+          // This will be handled by the useEffect that loads user message count
         }
       } catch {
         setAuthMethod("whatsapp");
@@ -391,6 +387,32 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     setSessionId(id);
   }, []);
 
+  // Load user message count when sessionId and chatbotId are available
+  useEffect(() => {
+    if (sessionId && chatbotId) {
+      console.log("Loading user message count on mount/reload", { sessionId, chatbotId, verified });
+      const key = `supa_user_message_count:${chatbotId}:${sessionId}`;
+      const stored = localStorage.getItem(key);
+      const savedCount = stored ? parseInt(stored, 10) : 0;
+      console.log("Setting userMessageCount to", savedCount, "from key", key);
+      setUserMessageCount(savedCount);
+      
+      // Only trigger auth if user has sent 2+ messages and is not verified
+      // This will be handled by the other useEffect that watches userMessageCount and verified
+    }
+  }, [sessionId, chatbotId]);
+
+  // Check if user needs auth based on message count when component mounts or verified state changes
+  useEffect(() => {
+    if (userMessageCount >= 2 && !verified) {
+      setNeedsAuth(true);
+      setShowInlineAuth(true);
+    } else if (verified) {
+      setNeedsAuth(false);
+      setShowInlineAuth(false);
+    }
+  }, [userMessageCount, verified]);
+
   // Set initial greeting
   useEffect(() => {
     if (!finalGreetingReady && chatbotId) {
@@ -398,6 +420,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
         {
           sender: "bot",
           text: welcomeMessage,
+          timestamp: new Date(),
         },
       ]);
       setFinalGreetingReady(true);
@@ -416,6 +439,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
         {
           sender: "bot",
           text: welcomeMessage,
+          timestamp: new Date(),
         },
       ]);
       setFinalGreetingReady(true);
@@ -438,46 +462,8 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Check free message count when sessionId or chatbotId changes
-  useEffect(() => {
-    if (sessionId && chatbotId && freeMessageLimit > 0) {
-      checkFreeMessageLimit();
-    }
-  }, [sessionId, chatbotId, freeMessageLimit, checkFreeMessageLimit]);
 
-  // Show language notification on page load using toastify
-  useEffect(() => {
-    if (showChat && chatbotId) {
-      const timer = setTimeout(() => {
-        toast("🌐 You can chat with us in all the Indian languages!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: false,
-          style: {
-            background: 'white',
-            color: '#333',
-            border: '1px solid rgba(0, 0, 0, 0.1)',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          }
-        });
-      }, 1000); // Show after 1 second delay
 
-      return () => clearTimeout(timer);
-    }
-  }, [showChat, chatbotId]);
-
-  // Handle free message exhaustion
-  useEffect(() => {
-    if (freeMessagesExhausted && !verified) {
-      setNeedsAuth(true);
-      setShowInlineAuth(true);
-    }
-  }, [freeMessagesExhausted, verified]);
 
   // Debug effect to track authentication state (removed to prevent infinite loop)
   // useEffect(() => {
@@ -486,11 +472,9 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   //     needsAuth,
   //     showInlineAuth,
   //     showInlineAuthInput,
-  //     freeMessagesExhausted,
-  //     freeMessagesUsed,
-  //     freeMessageLimit
+  //     userMessageCount
   //   });
-  // }, [verified, needsAuth, showInlineAuth, showInlineAuthInput, freeMessagesExhausted, freeMessagesUsed, freeMessageLimit]);
+  // }, [verified, needsAuth, showInlineAuth, showInlineAuthInput, userMessageCount]);
 
   // Note: Removed autoplay functionality - greeting TTS now only plays on manual user interaction
 
@@ -500,26 +484,37 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       const timeoutId = setTimeout(() => {
         if (messagesContainerRef.current) {
           const container = messagesContainerRef.current;
-          container.scrollTop = container.scrollHeight;
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
         }
       }, 100);
       return () => clearTimeout(timeoutId);
     }
   }, [isTyping]);
 
-  // Handle inline auth input delay after animation completes
+
+  // Handle inline auth input display
   useEffect(() => {
     if (
       showInlineAuth &&
       !verified &&
       !isTyping &&
-      !otpSent &&
-      animatedMessageIdx === chatHistory.length - 1
+      !otpSent
     ) {
-      const delayTimer = setTimeout(() => {
+      // Show auth input immediately if user has sent 2+ messages (page refresh scenario)
+      if (userMessageCount >= 2) {
         setShowInlineAuthInput(true);
-      }, 2000);
-      return () => clearTimeout(delayTimer);
+      } else {
+        // For new messages, wait for animation to complete
+        if (animatedMessageIdx === chatHistory.length - 1) {
+          const delayTimer = setTimeout(() => {
+            setShowInlineAuthInput(true);
+          }, 2000);
+          return () => clearTimeout(delayTimer);
+        }
+      }
     } else {
       setShowInlineAuthInput(false);
     }
@@ -530,6 +525,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
     otpSent,
     animatedMessageIdx,
     chatHistory.length,
+    userMessageCount,
   ]);
 
   // Handle OTP input display after animation completes
@@ -633,8 +629,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       setOtpSent(false);
       setOtp("");
       setResendTimeout(0);
-      setFreeMessagesUsed(0);
-      setFreeMessagesExhausted(false);
+      setUserMessageCount(0);
       setShowInlineAuth(false);
       setShowInlineAuthInput(false);
       setShowOtpInput(false);
@@ -643,6 +638,19 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       greetingAutoPlayed.current = false;
       setChatHistory([]);
       setFinalGreetingReady(false);
+      setHasShownInterestResponse(false);
+      languageMessageShown.current = false;
+      
+      // Clear user message count from localStorage
+      if (sessionId) {
+        try {
+          const key = `supa_user_message_count:${chatbotId}:${sessionId}`;
+          localStorage.removeItem(key);
+          console.log("Cleared user message count with key", key);
+        } catch (error) {
+          console.error("Error clearing user message count:", error);
+        }
+      }
     } else {
       hasMounted.current = true;
     }
@@ -736,9 +744,10 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
           const sid = sessionId || localStorage.getItem("sessionId");
           if (sid) {
             localStorage.removeItem(AUTH_GATE_KEY(sid, chatbotId));
-            localStorage.removeItem(FREE_MESSAGES_KEY(sid, chatbotId));
-            setFreeMessagesUsed(0);
-            setFreeMessagesExhausted(false);
+            const key = `supa_user_message_count:${chatbotId}:${sid}`;
+            localStorage.removeItem(key);
+            console.log("Cleared user message count after auth with key", key);
+            setUserMessageCount(0);
           }
         } catch {}
 
@@ -756,13 +765,15 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
   };
 
   const toggleMute = () => {
-    setIsMuted((prev) => {
-      const next = !prev;
-      if (audioObject) {
-        audioObject.muted = next;
-      }
-      return next;
-    });
+    console.log("toggleMute called, current isMuted:", isMuted, "currentlyPlaying:", currentlyPlaying);
+    const newMutedState = !isMuted;
+    console.log(`Mute state toggled to: ${newMutedState}`);
+    
+    // Apply mute state to currently playing audio first
+    toggleMuteForCurrentAudio(newMutedState);
+    
+    // Then update the state
+    setIsMuted(newMutedState);
   };
 
   const handleSuggestionClick = (suggestionText) => {
@@ -773,12 +784,6 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
 
   const handleSendMessage = useCallback(
     async (inputText) => {
-      if (!verified) {
-        const canSendFreeMessage = checkFreeMessageLimit();
-        if (!canSendFreeMessage) {
-          return;
-        }
-      }
 
       if (needsAuth && !verified) {
         return;
@@ -789,60 +794,196 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       const textToSend = inputText || message;
       if (!textToSend.trim()) return;
 
-      if (audioObject) audioObject.pause();
-
-      setUserHasInteracted(true);
-      setShowSuggestions(false); // Hide suggestions after first interaction
-      const userMessage = { sender: "user", text: textToSend };
+      // Properly stop any currently playing audio
+      console.log("Stopping any currently playing audio before sending new message");
+      stopAudio();
+      
+      // Small delay to ensure audio is fully stopped
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const userMessage = { sender: "user", text: textToSend, timestamp: new Date() };
       setChatHistory((prev) => [...prev, userMessage]);
       setMessage("");
       setIsTyping(true);
 
-      // Increment free message count BEFORE sending the message
-      if (!verified) {
-        incrementFreeMessageCount();
-      }
+      // Check if user sent "I'm interested" message
+      const isInterestedMessage = textToSend.toLowerCase().trim() === "i'm interested";
+
+      // Increment user message count
+      incrementUserMessageCount();
 
       try {
-        console.log("Sending query to backend:", textToSend);
-        const response = await axios.post(`${apiBase}/chat/query`, {
-          chatbotId,
-          query: textToSend,
-          sessionId,
-          ...(verified ? (authMethod === "email" ? { email } : { phone }) : {}),
-        });
-        console.log("Backend response:", response.data);
-
-        const { answer, audio, requiresAuthNext, auth_method } = response.data;
-
-        const botMessage = {
-          sender: "bot",
-          text: answer || "Sorry, I couldn't get that.",
-          audio,
-        };
+        let botMessage;
         
-        setChatHistory((prev) => {
-          const nh = [...prev, botMessage];
-          const botMessageIndex = nh.length - 1;
+        if (isInterestedMessage && !hasShownInterestResponse) {
+          // Handle "I'm interested" message with specific response
+          const thankYouText = "Thank you for showing interest in our WhatsApp marketing solutions.";
           
-          // Play audio after state update with correct index
-          if (audio && true) {
-            setTimeout(() => {
-              playAudio(audio, botMessageIndex);
-            }, 0);
+          // Generate TTS for the thank you message
+          let thankYouAudio = null;
+          if (apiBase) {
+            try {
+              const ttsResponse = await axios.post(`${apiBase}/text-to-speech`, {
+                text: thankYouText,
+              });
+              
+              if (ttsResponse.data.audio) {
+                const base64Data = ttsResponse.data.audio.replace(
+                  "data:audio/mpeg;base64,",
+                  ""
+                );
+                const byteArray = Array.from(atob(base64Data), (c) =>
+                  c.charCodeAt(0)
+                );
+                thankYouAudio = {
+                  data: byteArray,
+                  contentType: "audio/mpeg",
+                };
+              }
+            } catch (error) {
+              console.error("Failed to generate TTS for thank you message:", error);
+            }
           }
           
-          return nh;
-        });
+          botMessage = {
+            sender: "bot",
+            text: thankYouText,
+            audio: thankYouAudio,
+            timestamp: new Date(),
+          };
+          
+          setChatHistory((prev) => {
+            const nh = [...prev, botMessage];
+            const botMessageIndex = nh.length - 1;
+            
+            // Auto-play audio after state update with correct index
+            if (thankYouAudio) {
+              console.log(`Triggering audio for thank you message ${botMessageIndex}`);
+              playAudio(thankYouAudio, botMessageIndex);
+            }
+            
+            return nh;
+          });
+          setHasShownInterestResponse(true);
+          
+          // Add second message about Indian languages after a delay
+          setTimeout(async () => {
+            const languageText = "You can chat with me in all the Indian languages";
+            
+            // Enhanced protection against duplicate language messages
+            if (languageMessageShown.current) {
+              console.log("Language message already shown, skipping duplicate");
+              return;
+            }
+            
+            // Check if language message already exists in chat history
+            const hasLanguageMessage = chatHistory.some(msg => 
+              msg.sender === "bot" && msg.text === languageText
+            );
+            
+            if (hasLanguageMessage) {
+              console.log("Language message already exists in chat history, skipping");
+              return;
+            }
+            
+            languageMessageShown.current = true;
+            
+            // Language message will be text-only (no TTS)
+            const languageMessage = {
+              sender: "bot",
+              text: languageText,
+              timestamp: new Date(),
+              // No audio property - text-only message
+            };
+            
+            setChatHistory((prev) => {
+              const nh = [...prev, languageMessage];
+              // No auto-play for language message
+              return nh;
+            });
+            
+            // Add additional scrolling when language message arrives
+            setTimeout(() => {
+              if (messagesContainerRef.current) {
+                const container = messagesContainerRef.current;
+                container.scrollTo({
+                  top: container.scrollHeight,
+                  behavior: 'smooth'
+                });
+              }
+            }, 500); // Small delay to ensure the message is rendered
+          }, 4000); // Add second message after 2 seconds
+          
+          // First scroll to bottom, then show suggestions
+          setTimeout(() => {
+            if (messagesContainerRef.current) {
+              const container = messagesContainerRef.current;
+              container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth'
+              });
+              
+              // Show suggestions after scroll animation completes (typically 300-500ms)
+              setTimeout(() => {
+                setShowSuggestions(true);
+              }, 1200); // Wait for scroll animation to complete
+            }
+          }, 1000); // Start scroll after 1 second delay
+        } else if (isInterestedMessage && hasShownInterestResponse) {
+          // Handle subsequent "I'm interested" messages with a different response
+          const alreadyInterestedText = "I already know you're interested! Feel free to ask me any questions about our services.";
+          
+          botMessage = {
+            sender: "bot",
+            text: alreadyInterestedText,
+            timestamp: new Date(),
+          };
+          
+          setChatHistory((prev) => [...prev, botMessage]);
+        } else {
+          // Regular message handling
+          console.log("Sending query to backend:", textToSend);
+          const response = await axios.post(`${apiBase}/chat/query`, {
+            chatbotId,
+            query: textToSend,
+            sessionId,
+            ...(verified ? (authMethod === "email" ? { email } : { phone }) : { email: null, phone: null }),
+          });
+          console.log("Backend response:", response.data);
 
-        // Handle authentication requirements from backend
-        if (requiresAuthNext) {
-          setAuthMethod(auth_method || authMethod || "whatsapp");
-          setNeedsAuth(true);
-          setShowInlineAuth(true);
-          try {
-            localStorage.setItem(AUTH_GATE_KEY(sessionId, chatbotId), "1");
-          } catch {}
+          const { answer, audio, requiresAuthNext, auth_method } = response.data;
+
+          botMessage = {
+            sender: "bot",
+            text: answer || "Sorry, I couldn't get that.",
+            audio,
+            timestamp: new Date(),
+          };
+          
+          setChatHistory((prev) => {
+            const nh = [...prev, botMessage];
+            const botMessageIndex = nh.length - 1;
+            
+            // Auto-play audio after state update with correct index
+            if (audio) {
+              console.log(`Triggering audio for bot message ${botMessageIndex}`);
+              playAudio(audio, botMessageIndex);
+            }
+            
+            return nh;
+          });
+
+          // Hide suggestions for regular messages
+          setShowSuggestions(false);
+
+          // Handle authentication requirements from backend
+          if (requiresAuthNext) {
+            setAuthMethod(auth_method || authMethod || "whatsapp");
+            setNeedsAuth(true);
+            setShowInlineAuth(true);
+            try {
+              localStorage.setItem(AUTH_GATE_KEY(sessionId, chatbotId), "1");
+            } catch {}
+          }
         }
       } catch (err) {
         if (
@@ -883,6 +1024,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
             {
               sender: "bot",
               text: "Something went wrong. Please try again later.",
+              timestamp: new Date(),
             },
           ]);
         }
@@ -897,7 +1039,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
       verified,
       message,
       playAudio,
-      audioObject,
+      stopAudio,
       sessionId,
     ]
   );
@@ -986,7 +1128,12 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
               />
 
               <ChatContainer>
-                <MessagesContainer ref={messagesContainerRef}>
+                <MessagesContainer 
+                  ref={messagesContainerRef}
+                  style={{
+                    paddingBottom: showSuggestions && hasShownInterestResponse ? '100px' : '0px'
+                  }}
+                >
                   {chatHistory.map((msg, idx) => (
                     <MessageBubbleComponent
                       key={idx}
@@ -1031,7 +1178,6 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                     handleSendOtp={handleSendOtp}
                   />
 
-
                   <div ref={endOfMessagesRef} />
                 </MessagesContainer>
 
@@ -1039,7 +1185,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
 
                 <SuggestionButtons 
                   onSuggestionClick={handleSuggestionClick}
-                  isVisible={showSuggestions && !isTyping && chatHistory.length <= 1}
+                  isVisible={showSuggestions && !isTyping && hasShownInterestResponse}
                 />
 
                 <InputArea
@@ -1047,8 +1193,9 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                   setMessage={setMessage}
                   handleKeyPress={handleKeyPress}
                   isTyping={isTyping}
-                  freeMessagesExhausted={freeMessagesExhausted}
+                  userMessageCount={userMessageCount}
                   verified={verified}
+                  needsAuth={needsAuth}
                   isRecording={isRecording}
                   isMuted={isMuted}
                   toggleMute={toggleMute}
@@ -1059,6 +1206,7 @@ const SupaChatbot = ({ chatbotId, apiBase }) => {
                   handleMicMouseUp={handleMicMouseUp}
                   isMobile={isMobile}
                   handleSendMessage={handleSendMessage}
+                  currentlyPlaying={currentlyPlaying}
                 />
               </ChatContainer>
               <div className="gesture-bar" />

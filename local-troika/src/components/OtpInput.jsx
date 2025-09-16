@@ -22,10 +22,21 @@ const OtpInputBox = styled.input`
   outline: none;
   transition: all 0.2s ease;
 
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    background: #2d2d2d;
+    color: #ffffff;
+    border-color: #4a4a4a;
+  }
+
   &:focus {
     border-color: #8a2be2;
     background: white;
     box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.1);
+    
+    @media (prefers-color-scheme: dark) {
+      background: #3d3d3d;
+    }
   }
 
   &::-webkit-outer-spin-button,

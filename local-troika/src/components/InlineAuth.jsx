@@ -49,11 +49,7 @@ const InlineAuth = ({
       <div>
         <MessageBubble $isUser={false}>
           <div style={{ marginBottom: "12px" }}>
-            Please enter your{" "}
-            {authMethod === "email"
-              ? "email address"
-              : "WhatsApp number"}{" "}
-            to continue chatting with us
+            Share your WhatsApp number so we can keep the conversation going if we get disconnected.
           </div>
 
           {authMethod === "email" ? (
@@ -78,7 +74,10 @@ const InlineAuth = ({
                   borderRadius: "8px",
                   fontSize: "14px",
                   outline: "none",
+                  background: "white",
+                  color: "#000",
                 }}
+                className="auth-input"
               />
               <button
                 onClick={handleSendOtp}
@@ -158,7 +157,10 @@ const InlineAuth = ({
                     borderRadius: "8px",
                     fontSize: "14px",
                     outline: "none",
+                    background: "white",
+                    color: "#000",
                   }}
+                  className="auth-input"
                 />
               </div>
               <button
